@@ -21,3 +21,54 @@
     margin-top: 10%;
     margin-left: -59%;
 }
+
+.namee{
+    font-family: "Bubblegum Sans", sans-serif;
+    position: absolute;
+    font-size: 150%;
+    color: #FFEA00;
+    margin-top: -27%;
+    margin-left: 40%;
+
+}
+
+.square1{
+    width: 20%;
+    height: 8%;
+    background-color: #ff0000b6;
+    border-radius: 5%;
+    position: absolute;
+    margin-top: -25%;
+    margin-left: 40%;
+    border-radius: 10px;
+
+}
+
+.password{
+    font-family: "Bubblegum Sans", sans-serif;
+    position: absolute;
+    font-size: 150%;
+    color: #FFEA00;
+    margin-top: -20%;
+    margin-left: 40%;
+
+}
+
+.square2{
+    width: 20%;
+    height: 8%;
+    background-color: #ff0000b6;
+    border-radius: 5%;
+    position: absolute;
+    margin-top: -18%;
+    margin-left: 40%;
+    border-radius: 10px;
+}
+
+.start{
+    width: 15%;
+    height: 30%;
+    position: absolute;
+    margin-left: -56%;
+    margin-top: 29%;
+}
