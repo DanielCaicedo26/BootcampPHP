@@ -2,7 +2,7 @@
 $host = "localhost";
 $user = "root";
 $password = "";
-$dbname = "mi_base_de_datos";
+$dbname = "Dragon_cards";
 
 $conn = new mysqli($host, $user, $password, $dbname);
 
