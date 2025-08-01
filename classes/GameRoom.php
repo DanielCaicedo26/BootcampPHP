@@ -30,7 +30,7 @@ class GameRoom {
         $stmt = $this->conn->prepare($query);
         $stmt->execute([$roomCode]);
         return $stmt->fetch();
-}
+    }
 
     public function roomExists($roomCode) {
      return $this->getRoomByCode($roomCode) !== false;
