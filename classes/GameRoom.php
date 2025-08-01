@@ -9,7 +9,7 @@ class GameRoom {
     }
 
     // Función para crear una nueva sala de juego
-    public function createRomm($maxPlayers = 7) {
+    public function createRoom($maxPlayers = 7) {
         do{
             $roomCode = generateRoomCode();
         } while ($this->roomCodeExists($roomCode));
