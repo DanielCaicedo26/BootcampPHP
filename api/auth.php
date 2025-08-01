@@ -73,7 +73,7 @@ switch ($method) {
                 jsonResponse(['error' => 'Acción no válida'], 400);
         }
         break;
-        
+
     case 'GET':
         switch ($action) {
             case 'status':
