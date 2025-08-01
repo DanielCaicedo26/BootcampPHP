@@ -1,6 +1,5 @@
 <?php
 session_start();
-include 'config/conexion.php';
 
 // funcion para generar codigo de sala unico
 // se usa para que los jugadores puedan unirse a la sala de juego
