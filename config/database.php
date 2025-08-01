@@ -3,7 +3,7 @@
 $host = "localhost";
 $user = "root";
 $password = "";
-$dbname = "Dragon_cards";
+$dbname = "dragon";
 
 try {
     // Crear conexión PDO
