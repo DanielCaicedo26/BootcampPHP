@@ -18,8 +18,8 @@ class GameRoom {
         $stmt = $this->conn->prepare($query);
         if ($stmt->execute([$roomCode, $maxPlayers])) {
             return [
-                id => $this->conn->lastInsertId(),
-                room_code => $roomCode,
+                "id" => $this->conn->lastInsertId(),
+                "room_code" => $roomCode,
             ];
         }
         return false;
@@ -34,6 +34,9 @@ class GameRoom {
 
     public function roomExists($roomCode) {
      return $this->getRoomByCode($roomCode) !== false;
+    }
+    public function roomCodeExists($roomCode) {
+        return $this->getRoomByCode($roomCode) !== false;
     }
 
     public function updateRoomStatus($roomId, $status) {
@@ -54,3 +57,6 @@ class GameRoom {
 }
 ?>
    
+
+
+<?php
