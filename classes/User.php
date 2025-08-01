@@ -48,4 +48,6 @@ class User {
         // estas funciones me permitiran actualizar y agregar nuevos datos a la base de datos 
            
     }
-       
+
+}
+?>
