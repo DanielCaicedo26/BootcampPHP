@@ -499,7 +499,7 @@ function showCardDetails(cardId) {
     document.getElementById('cardTechnique').textContent = card.tecnica;
     document.getElementById('cardKi').textContent = card.ki;
     document.getElementById('cardWins').textContent = card.peleas_ganadas;
-    document.getElementById('cardDescription').textContent = `Personaje del universo Dragon Ball con ${card.fuerza} puntos de fuerza`;
+    //document.getElementById('cardDescription').textContent = `Personaje del universo Dragon Ball con ${card.fuerza} puntos de fuerza`;
     
     // Actualizar imagen si existe
     const cardImage = document.getElementById('cardImage');
