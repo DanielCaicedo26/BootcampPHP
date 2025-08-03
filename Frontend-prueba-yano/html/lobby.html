@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dragon Game - Lobby</title>
+    <link rel="stylesheet" href="../css/lobby.css">
+</head>
+<body>
+    <!-- Header con información del usuario -->
+    <header class="game-header">
+        <div class="header-content">
+            <div class="logo">
+                <h1>🐉 DRAGON</h1>
+            </div>
+            <div class="user-info">
+                <span class="username" id="headerUsername">Usuario</span>
+                <button class="logout-btn" onclick="logout()">Cerrar Sesión</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="lobby-container">
+        <!-- Navegación principal -->
+        <nav class="main-nav">
+            <button class="nav-btn active" onclick="switchSection('rooms')" id="roomsBtn">
+                🏠 Salas de Juego
+            </button>
+            <button class="nav-btn" onclick="switchSection('cards')" id="cardsBtn">
+                🃏 Ver Cartas
+            </button>
+        </nav>
+
+        <!-- Alertas -->
+        <div class="alert" id="alertMessage"></div>
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Cargando...</p>
+        </div>
+
+        <!-- Sección de Salas -->
+        <section class="content-section active" id="roomsSection">
+            <div class="section-header">
+                <h2>🏠 Gestión de Salas</h2>
+                <button class="create-room-btn" onclick="showCreateRoomModal()">
+                    ➕ Crear Nueva Sala
+                </button>
+            </div>
+
+            <!-- Lista de salas activas -->
+            <div class="rooms-grid" id="roomsGrid">
+                <div class="empty-state">
+                    <div class="empty-icon">🎮</div>
+                    <h3>No hay salas activas</h3>
+                    <p>¡Crea una nueva sala para comenzar a jugar!</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Sección de Cartas -->
+        <section class="content-section" id="cardsSection">
+            <div class="section-header">
+                <h2>🃏 Cartas del Juego</h2>
+                <div class="cards-filters">
+                    <select id="mapFilter" onchange="filterCards()">
+                        <option value="">Todos los mapas</option>
+                    </select>
+                    <input type="text" id="searchCards" placeholder="Buscar cartas..." oninput="filterCards()">
+                </div>
+            </div>
+
+            <div class="cards-grid" id="cardsGrid">
+                <div class="loading-cards">
+                    <div class="spinner"></div>
+                    <p>Cargando cartas...</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal para crear sala -->
+    <div class="modal-overlay" id="createRoomModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>🏠 Crear Nueva Sala</h3>
+                <button class="close-modal" onclick="hideCreateRoomModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <form onsubmit="createRoom(event)">
+                    <div class="form-group">
+                        <label for="maxPlayers">Número máximo de jugadores</label>
+                        <select id="maxPlayers" required>
+                            <option value="2">2 jugadores</option>
+                            <option value="3">3 jugadores</option>
+                            <option value="4">4 jugadores</option>
+                            <option value="5">5 jugadores</option>
+                            <option value="6">6 jugadores</option>
+                            <option value="7" selected>7 jugadores</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="isPrivate">
+                            Sala privada
+                        </label>
+                        <small>Las salas privadas solo son accesibles con código</small>
+                    </div>
+                    <div class="modal-actions">
+                        <button type="button" class="btn-secondary" onclick="hideCreateRoomModal()">
+                            Cancelar
+                        </button>
+                        <button type="submit" class="btn-primary">
+                            Crear Sala
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para detalles de sala -->
+    <div class="modal-overlay" id="roomDetailsModal">
+        <div class="modal room-modal">
+            <div class="modal-header">
+                <h3 id="roomTitle">🏠 Sala: XXXXX</h3>
+                <button class="close-modal" onclick="hideRoomDetailsModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="room-info">
+                    <div class="room-code">
+                        <label>Código de la sala:</label>
+                        <div class="code-display">
+                            <span id="roomCodeDisplay">XXXXX</span>
+                            <button class="copy-btn" onclick="copyRoomCode()">📋</button>
+                        </div>
+                    </div>
+                    <div class="room-stats">
+                        <div class="stat">
+                            <span class="stat-label">Jugadores:</span>
+                            <span class="stat-value" id="playersCount">0/7</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-label">Estado:</span>
+                            <span class="stat-value status" id="roomStatus">Esperando</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="players-list">
+                    <h4>👥 Jugadores en la sala</h4>
+                    <div id="playersList">
+                        <!-- Lista de jugadores se carga dinámicamente -->
+                    </div>
+                </div>
+
+                <div class="room-actions">
+                    <button class="btn-danger" onclick="deleteRoom()">
+                        🗑️ Eliminar Sala
+                    </button>
+                    <button class="btn-primary" onclick="startGame()" id="startGameBtn">
+                        🎮 Iniciar Juego
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para detalles de carta -->
+    <div class="modal-overlay" id="cardDetailsModal">
+        <div class="modal card-modal">
+            <div class="modal-header">
+                <h3 id="cardTitle">🃏 Detalle de Carta</h3>
+                <button class="close-modal" onclick="hideCardDetailsModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="card-detail">
+                    <div class="card-image">
+                        <img id="cardImage" src="" alt="Carta">
+                    </div>
+                    <div class="card-info">
+                        <h4 id="cardName">Nombre de la carta</h4>
+                        <div class="card-attributes">
+                            <div class="attribute">
+                                <span class="attr-label">⚡ Poder:</span>
+                                <span class="attr-value" id="cardPower">0</span>
+                            </div>
+                            <div class="attribute">
+                                <span class="attr-label">🛡️ Defensa:</span>
+                                <span class="attr-value" id="cardDefense">0</span>
+                            </div>
+                            <div class="attribute">
+                                <span class="attr-label">🏃 Velocidad:</span>
+                                <span class="attr-value" id="cardSpeed">0</span>
+                            </div>
+                            <div class="attribute">
+                                <span class="attr-label">🧠 Inteligencia:</span>
+                                <span class="attr-value" id="cardIntelligence">0</span>
+                            </div>
+                        </div>
+                        <div class="card-description">
+                            <p id="cardDescription">Descripción de la carta...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/lobby.js"></script>
+</body>
+</html>

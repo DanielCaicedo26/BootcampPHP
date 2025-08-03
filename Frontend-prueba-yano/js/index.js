@@ -47,7 +47,7 @@ async function handleLogin(event) {
         if (data.success) {
             showAlert('¡Inicio de sesión exitoso!', 'success');
             setTimeout(() => {
-                showUserInfo(data.username);
+                window.location.href = 'lobby.html';
             }, 1000);
         } else {
             showAlert(data.error || 'Error al iniciar sesión', 'error');
