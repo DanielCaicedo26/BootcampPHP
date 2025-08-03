@@ -132,37 +132,49 @@ function updatePlayerName(playerId, name) {
 async function loadMaps() {
     try {
         showLoading(true);
-        
+
         const response = await fetch(`${API_ROOMS}?action=maps`);
         if (!response.ok) {
             throw new Error(`Error HTTP: ${response.status}`);
         }
-        
+
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            const text = await response.text();
+            // Mostrar el error en el contenedor de mapas
+            const mapsGrid = document.getElementById('mapsGrid');
+            if (mapsGrid) {
+                mapsGrid.innerHTML = `<div style="color:red;"><b>Error de backend:</b><br><pre>${text.slice(0, 500)}</pre></div>`;
+            }
+            throw new Error('Respuesta del servidor no es JSON. Recibido: ' + text.slice(0, 200));
+        }
+
         const data = await response.json();
         
+
         if (!data || typeof data !== 'object') {
             throw new Error('Respuesta inválida del servidor');
         }
-        
+
         if (!Array.isArray(data.maps)) {
             throw new Error('Formato de datos inválido');
         }
-        
+
         maps = data.maps;
-        
+
         if (maps.length === 0) {
             showAlert('No hay mapas disponibles en este momento', 'warning');
         }
-        
+
         renderMaps(maps);
-        
+
         // Actualizar filtro de mapas
         const mapFilter = document.getElementById('mapFilter');
         if (mapFilter) {
             mapFilter.innerHTML = '<option value="">Todos los mapas</option>' +
                 maps.map(map => `<option value="${map.id}">${map.name}</option>`).join('');
         }
-        
+
     } catch (error) {
         console.error('Error en loadMaps:', error);
         showAlert('Error al cargar los mapas: ' + error.message, 'error');

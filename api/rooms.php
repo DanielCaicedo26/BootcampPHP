@@ -1,7 +1,6 @@
 <?php
 require_once '../config/database.php';
 require_once '../config/session.php';
-require_once '../config/utils.php';
 require_once '../classes/GameRoom.php';
 require_once '../classes/Player.php';
 require_once '../classes/Game.php';
@@ -159,6 +158,7 @@ switch ($method) {
                 
             case 'maps':
                 $maps = $game->getAllMaps();
+                error_log('MAPS: ' . print_r($maps, true)); // <-- Agrega esto para ver el resultado en error.log
                 jsonResponse(['maps' => $maps]);
                 break;
                 

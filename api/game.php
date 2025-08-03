@@ -13,6 +13,16 @@ class Game {
         return $stmt->fetchAll();
     }
 
+     public function getAllMaps() {
+        $stmt = $this->db->prepare("SELECT id, name, description, image_url FROM maps");
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+    public function getMapById($id) { return null; }
+    public function assignCardsToPlayers($roomId) { return true; }
+    public function playCard($roomId, $playerId, $cardId, $roundId, $attributeValue) { return true; }
+    public function getPlayerCards($roomId, $playerId) { return []; }
+
     public function getMapById($mapId) {
         $query = "SELECT * FROM maps WHERE id = ?";
         $stmt = $this->conn->prepare($query);
