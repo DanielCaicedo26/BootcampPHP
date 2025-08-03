@@ -32,9 +32,18 @@ class GameRoom {
         return $stmt->fetch();
     }
 
+    // NUEVO: Método para obtener sala por ID
+    public function getRoomById($roomId) {
+        $query = "SELECT * FROM " . $this->table_name . " WHERE id = ?";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute([$roomId]);
+        return $stmt->fetch();
+    }
+
     public function roomExists($roomCode) {
      return $this->getRoomByCode($roomCode) !== false;
     }
+    
     public function roomCodeExists($roomCode) {
         return $this->getRoomByCode($roomCode) !== false;
     }
@@ -44,19 +53,27 @@ class GameRoom {
         $stmt = $this->conn->prepare($query);
         return $stmt->execute([$status, $roomId]);
     }
+    
     public function setSelectedMap($roomId, $mapId) {
         $query = "UPDATE " . $this->table_name . " SET selected_map_id = ? WHERE id = ?";
         $stmt = $this->conn->prepare($query);
         return $stmt->execute([$mapId, $roomId]);
     }
+    
     public function updateCurrentRound($roomId, $round, $attribute) {
         $query = "UPDATE " . $this->table_name . " SET current_round = ? WHERE id = ?";
         $stmt = $this->conn->prepare($query);
         return $stmt->execute([$round, $roomId]);
     }
 }
+
+// Función auxiliar para generar códigos de sala únicos
+function generateRoomCode($length = 6) {
+    $characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    $code = '';
+    for ($i = 0; $i < $length; $i++) {
+        $code .= $characters[rand(0, strlen($characters) - 1)];
+    }
+    return $code;
+}
 ?>
-   
-
-
-<?php

@@ -1,6 +1,7 @@
 <?php
 class Game {
     private $db;
+    
     public function __construct($db) {
         $this->db = $db;
     }
@@ -17,8 +18,28 @@ class Game {
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    // Métodos básicos para que no falle el backend
-    public function assignCardsToPlayers($roomId) { return true; }
-    public function playCard($roomId, $playerId, $cardId, $roundId, $attributeValue) { return true; }
-    public function getPlayerCards($roomId, $playerId) { return []; }
+    public function getAllCards() {
+        $stmt = $this->db->prepare("SELECT id, name, altura_mts, tecnica, fuerza, peleas_ganadas, velocidad_percent, ki, image_url FROM cards ORDER BY name");
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function getCardById($cardId) {
+        $stmt = $this->db->prepare("SELECT id, name, altura_mts, tecnica, fuerza, peleas_ganadas, velocidad_percent, ki, image_url FROM cards WHERE id = ?");
+        $stmt->execute([$cardId]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    public function assignCardsToPlayers($roomId) { 
+        return true; 
+    }
+    
+    public function playCard($roomId, $playerId, $cardId, $roundId, $attributeValue) { 
+        return true; 
+    }
+    
+    public function getPlayerCards($roomId, $playerId) { 
+        return []; 
+    }
 }
+?>

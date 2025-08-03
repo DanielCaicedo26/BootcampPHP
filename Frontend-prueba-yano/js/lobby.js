@@ -141,7 +141,6 @@ async function loadMaps() {
         const contentType = response.headers.get('content-type');
         if (!contentType || !contentType.includes('application/json')) {
             const text = await response.text();
-            // Mostrar el error en el contenedor de mapas
             const mapsGrid = document.getElementById('mapsGrid');
             if (mapsGrid) {
                 mapsGrid.innerHTML = `<div style="color:red;"><b>Error de backend:</b><br><pre>${text.slice(0, 500)}</pre></div>`;
@@ -150,7 +149,6 @@ async function loadMaps() {
         }
 
         const data = await response.json();
-        
 
         if (!data || typeof data !== 'object') {
             throw new Error('Respuesta inválida del servidor');
@@ -408,62 +406,36 @@ async function confirmStartGame() {
 }
 
 // ==========================================
-// FUNCIONES DE CARTAS
+// FUNCIONES DE CARTAS - ACTUALIZADO PARA USAR DB
 // ==========================================
 
 async function loadCards() {
     try {
         showLoading(true);
         
-        const mockCards = [
-            {
-                id: 1, name: 'Goku', altura_mts: 1.75, tecnica: 9.5, fuerza: 95, 
-                peleas_ganadas: 150, velocidad_percent: 90, ki: 98,
-                description: 'El Saiyajin más poderoso de la Tierra'
-            },
-            {
-                id: 2, name: 'Vegeta', altura_mts: 1.64, tecnica: 9.2, fuerza: 92, 
-                peleas_ganadas: 140, velocidad_percent: 88, ki: 95,
-                description: 'El Príncipe de los Saiyajin'
-            },
-            {
-                id: 3, name: 'Piccolo', altura_mts: 2.26, tecnica: 8.8, fuerza: 80, 
-                peleas_ganadas: 85, velocidad_percent: 75, ki: 90,
-                description: 'El Namekiano guerrero'
-            },
-            {
-                id: 4, name: 'Gohan', altura_mts: 1.76, tecnica: 8.8, fuerza: 88, 
-                peleas_ganadas: 80, velocidad_percent: 85, ki: 92,
-                description: 'El hijo de Goku con gran potencial'
-            },
-            {
-                id: 5, name: 'Trunks', altura_mts: 1.70, tecnica: 8.7, fuerza: 85, 
-                peleas_ganadas: 60, velocidad_percent: 92, ki: 88,
-                description: 'El guerrero del futuro'
-            },
-            {
-                id: 6, name: 'Cell', altura_mts: 2.13, tecnica: 9.3, fuerza: 94, 
-                peleas_ganadas: 30, velocidad_percent: 86, ki: 96,
-                description: 'El androide perfecto'
-            },
-            {
-                id: 7, name: 'Frieza', altura_mts: 1.58, tecnica: 9.0, fuerza: 89, 
-                peleas_ganadas: 100, velocidad_percent: 83, ki: 94,
-                description: 'El emperador del universo'
-            },
-            {
-                id: 8, name: 'Majin Buu', altura_mts: 1.69, tecnica: 7.5, fuerza: 96, 
-                peleas_ganadas: 25, velocidad_percent: 70, ki: 98,
-                description: 'La criatura mágica más poderosa'
-            }
-        ];
+        // Cargar cartas desde la base de datos
+        const response = await fetch(`${API_ROOMS}?action=cards`);
         
-        cards = mockCards;
-        renderCards(cards);
+        if (!response.ok) {
+            throw new Error(`Error HTTP: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (data.cards && Array.isArray(data.cards)) {
+            cards = data.cards;
+            console.log('Cartas cargadas desde DB:', cards.length);
+            renderCards(cards);
+        } else {
+            throw new Error('No se pudieron cargar las cartas desde la base de datos');
+        }
         
     } catch (error) {
         console.error('Error cargando cartas:', error);
-        showAlert('Error al cargar las cartas', 'error');
+        showAlert('Error al cargar las cartas: ' + error.message, 'error');
+        
+        // En caso de error, mostrar estado vacío
+        renderCards([]);
     } finally {
         showLoading(false);
     }
@@ -477,7 +449,7 @@ function renderCards(cardsToRender) {
             <div class="empty-state">
                 <div class="empty-icon">🃏</div>
                 <h3>No se encontraron cartas</h3>
-                <p>Intenta ajustar los filtros de búsqueda.</p>
+                <p>Intenta ajustar los filtros de búsqueda o verifica la conexión con la base de datos.</p>
             </div>
         `;
         return;
@@ -485,7 +457,10 @@ function renderCards(cardsToRender) {
     
     cardsGrid.innerHTML = cardsToRender.map(card => `
         <div class="card-item" onclick="showCardDetails(${card.id})">
-            <div class="card-image">🃏</div>
+            <div class="card-image">
+                ${card.image_url ? `<img src="${card.image_url}" alt="${card.name}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">` : ''}
+                <div style="font-size: 3em; ${card.image_url ? 'display: none;' : ''}">🃏</div>
+            </div>
             <div class="card-content">
                 <div class="card-name">${card.name}</div>
                 <div class="card-attributes">
@@ -505,8 +480,7 @@ function filterCards() {
     
     if (searchTerm) {
         filteredCards = filteredCards.filter(card => 
-            card.name.toLowerCase().includes(searchTerm) ||
-            (card.description && card.description.toLowerCase().includes(searchTerm))
+            card.name.toLowerCase().includes(searchTerm)
         );
     }
     
@@ -525,7 +499,18 @@ function showCardDetails(cardId) {
     document.getElementById('cardTechnique').textContent = card.tecnica;
     document.getElementById('cardKi').textContent = card.ki;
     document.getElementById('cardWins').textContent = card.peleas_ganadas;
-    document.getElementById('cardDescription').textContent = card.description || 'Personaje del universo Dragon Ball';
+    document.getElementById('cardDescription').textContent = `Personaje del universo Dragon Ball con ${card.fuerza} puntos de fuerza`;
+    
+    // Actualizar imagen si existe
+    const cardImage = document.getElementById('cardImage');
+    if (card.image_url) {
+        cardImage.src = card.image_url;
+        cardImage.style.display = 'block';
+        cardImage.nextElementSibling.style.display = 'none';
+    } else {
+        cardImage.style.display = 'none';
+        cardImage.nextElementSibling.style.display = 'flex';
+    }
     
     showCardDetailsModal();
 }

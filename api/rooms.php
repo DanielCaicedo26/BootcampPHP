@@ -158,8 +158,13 @@ switch ($method) {
                 
             case 'maps':
                 $maps = $game->getAllMaps();
-                error_log('MAPS: ' . print_r($maps, true)); // <-- Agrega esto para ver el resultado en error.log
                 jsonResponse(['maps' => $maps]);
+                break;
+                
+            case 'cards':
+                // NUEVO: Endpoint para obtener todas las cartas
+                $cards = $game->getAllCards();
+                jsonResponse(['cards' => $cards]);
                 break;
                 
             case 'player_cards':
