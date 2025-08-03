@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 03-08-2025 a las 23:38:03
+-- Tiempo de generación: 04-08-2025 a las 01:28:08
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.0.30
 
@@ -38,6 +38,71 @@ CREATE TABLE `cards` (
   `ki` int(11) NOT NULL,
   `image_url` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `cards`
+--
+
+INSERT INTO `cards` (`id`, `name`, `altura_mts`, `tecnica`, `fuerza`, `peleas_ganadas`, `velocidad_percent`, `ki`, `image_url`) VALUES
+(1, 'Goku', 1.75, 9.500, 95, 87, 92, 98, '/images/cards/goku.jpg'),
+(2, 'Vegeta', 1.64, 9.200, 92, 78, 90, 95, '/images/cards/vegeta.jpg'),
+(3, 'Gohan', 1.76, 8.800, 88, 45, 85, 92, '/images/cards/gohan.jpg'),
+(4, 'Goten', 1.23, 7.500, 75, 32, 88, 85, '/images/cards/goten.jpg'),
+(5, 'Trunks', 1.29, 7.800, 78, 35, 90, 87, '/images/cards/trunks.jpg'),
+(6, 'Future Trunks', 1.70, 8.500, 85, 52, 88, 89, '/images/cards/future_trunks.jpg'),
+(7, 'Bardock', 1.78, 8.200, 82, 89, 85, 86, '/images/cards/bardock.jpg'),
+(8, 'Raditz', 1.85, 6.800, 78, 25, 82, 75, '/images/cards/raditz.jpg'),
+(9, 'Nappa', 2.02, 6.500, 88, 67, 65, 72, '/images/cards/nappa.jpg'),
+(10, 'Broly', 2.30, 7.200, 98, 45, 75, 96, '/images/cards/broly.jpg'),
+(11, 'Piccolo', 2.26, 9.000, 85, 68, 80, 88, '/images/cards/piccolo.jpg'),
+(12, 'Krillin', 1.53, 8.500, 65, 48, 85, 70, '/images/cards/krillin.jpg'),
+(13, 'Yamcha', 1.83, 7.200, 58, 35, 78, 52, '/images/cards/yamcha.jpg'),
+(14, 'Tien', 1.87, 8.800, 72, 42, 82, 68, '/images/cards/tien.jpg'),
+(15, 'Chiaotzu', 1.38, 6.500, 35, 15, 75, 45, '/images/cards/chiaotzu.jpg'),
+(16, 'Master Roshi', 1.65, 9.200, 65, 78, 70, 75, '/images/cards/master_roshi.jpg'),
+(17, 'Yajirobe', 1.65, 5.500, 45, 12, 40, 25, '/images/cards/yajirobe.jpg'),
+(18, 'Android 16', 2.00, 7.800, 90, 15, 75, 85, '/images/cards/android_16.jpg'),
+(19, 'Android 17', 1.69, 8.200, 82, 38, 88, 88, '/images/cards/android_17.jpg'),
+(20, 'Android 18', 1.69, 8.000, 78, 42, 85, 85, '/images/cards/android_18.jpg'),
+(21, 'Cell', 2.13, 9.800, 95, 28, 92, 96, '/images/cards/cell.jpg'),
+(22, 'Cell Jr', 1.32, 8.500, 75, 8, 90, 80, '/images/cards/cell_jr.jpg'),
+(23, 'Frieza', 1.58, 9.500, 92, 85, 88, 94, '/images/cards/frieza.jpg'),
+(24, 'Majin Buu', 1.69, 7.500, 88, 45, 70, 92, '/images/cards/majin_buu.jpg'),
+(25, 'Kid Buu', 1.45, 8.200, 85, 12, 95, 95, '/images/cards/kid_buu.jpg'),
+(26, 'Super Buu', 2.44, 8.800, 90, 25, 88, 94, '/images/cards/super_buu.jpg'),
+(27, 'Dabura', 2.13, 8.500, 82, 35, 78, 85, '/images/cards/dabura.jpg'),
+(28, 'Saibaman', 1.20, 4.500, 45, 5, 65, 35, '/images/cards/saibaman.jpg'),
+(29, 'Guldo', 1.19, 6.200, 35, 8, 45, 42, '/images/cards/guldo.jpg'),
+(30, 'Recoome', 2.41, 6.800, 85, 22, 60, 65, '/images/cards/recoome.jpg'),
+(31, 'Burter', 2.24, 7.200, 72, 18, 95, 68, '/images/cards/burter.jpg'),
+(32, 'Jeice', 1.98, 7.000, 68, 15, 88, 65, '/images/cards/jeice.jpg'),
+(33, 'Captain Ginyu', 1.87, 8.200, 78, 45, 82, 78, '/images/cards/captain_ginyu.jpg'),
+(34, 'Bulma', 1.65, 9.800, 15, 0, 55, 8, '/images/cards/bulma.jpg'),
+(35, 'Chi-Chi', 1.63, 7.500, 52, 25, 70, 45, '/images/cards/chi_chi.jpg'),
+(36, 'Videl', 1.57, 7.800, 48, 35, 75, 42, '/images/cards/videl.jpg'),
+(37, 'Mr. Satan', 1.88, 6.200, 55, 89, 65, 35, '/images/cards/mr_satan.jpg'),
+(38, 'Ox-King', 3.50, 5.800, 78, 45, 35, 52, '/images/cards/ox_king.jpg'),
+(39, 'Beerus', 1.75, 9.900, 99, 95, 95, 99, '/images/cards/beerus.jpg'),
+(40, 'Whis', 1.79, 9.990, 99, 98, 98, 99, '/images/cards/whis.jpg'),
+(41, 'King Kai', 1.03, 8.500, 25, 15, 45, 88, '/images/cards/king_kai.jpg'),
+(42, 'Kami', 2.26, 9.200, 65, 35, 70, 85, '/images/cards/kami.jpg'),
+(43, 'Mr. Popo', 1.75, 8.800, 72, 85, 75, 82, '/images/cards/mr_popo.jpg'),
+(44, 'Cooler', 2.13, 9.200, 88, 42, 85, 90, '/images/cards/cooler.jpg'),
+(45, 'Janemba', 1.95, 8.800, 92, 15, 88, 94, '/images/cards/janemba.jpg'),
+(46, 'Garlic Jr', 1.07, 7.500, 65, 18, 72, 75, '/images/cards/garlic_jr.jpg'),
+(47, 'Turles', 1.78, 8.000, 82, 35, 88, 85, '/images/cards/turles.jpg'),
+(48, 'Lord Slug', 2.44, 7.800, 85, 45, 70, 82, '/images/cards/lord_slug.jpg'),
+(49, 'Babidi', 1.22, 8.500, 25, 12, 55, 88, '/images/cards/babidi.jpg'),
+(50, 'Spopovich', 2.13, 5.500, 78, 25, 65, 42, '/images/cards/spopovich.jpg'),
+(51, 'Yamu', 1.83, 5.200, 72, 22, 68, 38, '/images/cards/yamu.jpg'),
+(52, 'General Blue', 1.80, 7.800, 68, 35, 82, 65, '/images/cards/general_blue.jpg'),
+(53, 'Colonel Silver', 1.75, 6.500, 55, 28, 75, 45, '/images/cards/colonel_silver.jpg'),
+(54, 'Tambourine', 1.65, 7.200, 65, 18, 85, 62, '/images/cards/tambourine.jpg'),
+(55, 'Cymbal', 1.70, 6.800, 62, 15, 82, 58, '/images/cards/cymbal.jpg'),
+(56, 'Drum', 2.44, 7.500, 78, 22, 75, 68, '/images/cards/drum.jpg'),
+(57, 'King Piccolo', 2.50, 8.800, 82, 65, 78, 88, '/images/cards/king_piccolo.jpg'),
+(58, 'Shenron', 9.99, 9.500, 88, 85, 70, 95, '/images/cards/shenron.jpg'),
+(59, 'Porunga', 9.99, 9.200, 85, 78, 65, 92, '/images/cards/porunga.jpg');
 
 -- --------------------------------------------------------
 
@@ -237,7 +302,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT de la tabla `cards`
 --
 ALTER TABLE `cards`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=60;
 
 --
 -- AUTO_INCREMENT de la tabla `game_rooms`
