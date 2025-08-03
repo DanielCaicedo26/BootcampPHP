@@ -1,17 +1,6 @@
 <?php
 session_start();
 
-// funcion para generar codigo de sala unico
-// se usa para que los jugadores puedan unirse a la sala de juego
-function generateRoomCode() {
-    $characters = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    $result = '';
-    for ($i = 0; $i < 6; $i++) {
-        $result .= $characters[rand(0, strlen($characters) - 1)];
-    }
-    return $result;
-}
-
 // funcion para hashear la contraseña
 function hashPassword($password) {
     return password_hash($password, PASSWORD_DEFAULT);
