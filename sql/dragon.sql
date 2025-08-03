@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 03-08-2025 a las 22:44:22
+-- Tiempo de generación: 03-08-2025 a las 23:38:03
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.0.30
 
@@ -97,20 +97,6 @@ INSERT INTO `maps` (`id`, `name`, `description`, `image_url`) VALUES
 (5, 'Torneo de Artes Marciales', 'El ring donde se celebran los torneos', '/images/maps/tournament.jpg'),
 (6, 'Cámara del Tiempo', 'Dimensión donde el tiempo fluye diferente', '/images/maps/time_chamber.jpg'),
 (7, 'Planeta Bills', 'Mundo del Dios de la Destrucción', '/images/maps/beerus.jpg');
-
--- --------------------------------------------------------
-
---
--- Estructura de tabla para la tabla `map_votes`
---
-
-CREATE TABLE `map_votes` (
-  `id` int(11) NOT NULL,
-  `room_id` int(11) NOT NULL,
-  `player_id` int(11) NOT NULL,
-  `map_id` int(11) NOT NULL,
-  `voted_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -211,15 +197,6 @@ ALTER TABLE `maps`
   ADD PRIMARY KEY (`id`);
 
 --
--- Indices de la tabla `map_votes`
---
-ALTER TABLE `map_votes`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `room_id` (`room_id`),
-  ADD KEY `player_id` (`player_id`),
-  ADD KEY `map_id` (`map_id`);
-
---
 -- Indices de la tabla `player_cards`
 --
 ALTER TABLE `player_cards`
@@ -281,12 +258,6 @@ ALTER TABLE `maps`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
--- AUTO_INCREMENT de la tabla `map_votes`
---
-ALTER TABLE `map_votes`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
 -- AUTO_INCREMENT de la tabla `player_cards`
 --
 ALTER TABLE `player_cards`
@@ -326,14 +297,6 @@ ALTER TABLE `game_rooms`
 ALTER TABLE `game_rounds`
   ADD CONSTRAINT `game_rounds_ibfk_1` FOREIGN KEY (`room_id`) REFERENCES `game_rooms` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `game_rounds_ibfk_2` FOREIGN KEY (`winner_player_id`) REFERENCES `room_players` (`id`);
-
---
--- Filtros para la tabla `map_votes`
---
-ALTER TABLE `map_votes`
-  ADD CONSTRAINT `map_votes_ibfk_1` FOREIGN KEY (`room_id`) REFERENCES `game_rooms` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `map_votes_ibfk_2` FOREIGN KEY (`player_id`) REFERENCES `room_players` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `map_votes_ibfk_3` FOREIGN KEY (`map_id`) REFERENCES `maps` (`id`);
 
 --
 -- Filtros para la tabla `player_cards`
