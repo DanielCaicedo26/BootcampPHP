@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dragon Game - Autenticación</title>
+    <link rel="stylesheet" href="../css/index.css">
+</head>
+<body>
+    <div class="auth-container">
+        <div class="logo">
+            <h1>🐉 DRAGON</h1>
+            <p>¡Únete a la aventura!</p>
+        </div>
+
+        <!-- Información del usuario logueado -->
+        <div class="user-info" id="userInfo">
+            <h3>¡Bienvenido!</h3>
+            <p><strong>Usuario:</strong> <span id="currentUsername"></span></p>
+            <button class="logout-btn" onclick="logout()">Cerrar Sesión</button>
+        </div>
+
+        <!-- Formularios de autenticación -->
+        <div id="authForms">
+            <div class="form-tabs">
+                <button class="tab-button active" onclick="switchTab('login')">Iniciar Sesión</button>
+                <button class="tab-button" onclick="switchTab('register')">Registro</button>
+            </div>
+
+            <div class="alert" id="alertMessage"></div>
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Procesando...</p>
+            </div>
+
+            <!-- Formulario de Login -->
+            <div class="form-container active" id="loginForm">
+                <form onsubmit="handleLogin(event)">
+                    <div class="form-group">
+                        <label for="loginUsername">Usuario</label>
+                        <input type="text" id="loginUsername" required placeholder="Ingresa tu usuario">
+                    </div>
+                    <div class="form-group">
+                        <label for="loginPassword">Contraseña</label>
+                        <input type="password" id="loginPassword" required placeholder="Ingresa tu contraseña">
+                    </div>
+                    <button type="submit" class="submit-btn">Iniciar Sesión</button>
+                </form>
+            </div>
+
+            <!-- Formulario de Registro -->
+            <div class="form-container" id="registerForm">
+                <form onsubmit="handleRegister(event)">
+                    <div class="form-group">
+                        <label for="registerUsername">Usuario</label>
+                        <input type="text" id="registerUsername" required placeholder="Elige tu nombre de usuario">
+                    </div>
+                    <div class="form-group">
+                        <label for="registerPassword">Contraseña</label>
+                        <input type="password" id="registerPassword" required placeholder="Crea una contraseña segura">
+                    </div>
+                    <div class="form-group">
+                        <label for="confirmPassword">Confirmar Contraseña</label>
+                        <input type="password" id="confirmPassword" required placeholder="Confirma tu contraseña">
+                    </div>
+                    <button type="submit" class="submit-btn">Crear Cuenta</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/index.js"></script>
+</body>
+</html>
