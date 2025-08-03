@@ -12,48 +12,6 @@ class Game {
         $stmt->execute();
         return $stmt->fetchAll();
     }
-
-    public function voteForMap($roomId, $playerId, $mapId) {
-        // Verificar si ya votó
-        $query = "SELECT id FROM map_votes WHERE room_id = ? AND player_id = ?";
-        $stmt = $this->conn->prepare($query);
-        $stmt->execute([$roomId, $playerId]);
-        
-        if ($stmt->fetch()) {
-            // Actualizar voto existente
-            $query = "UPDATE map_votes SET map_id = ? WHERE room_id = ? AND player_id = ?";
-            $stmt = $this->conn->prepare($query);
-            return $stmt->execute([$mapId, $roomId, $playerId]);
-        } else {
-            // Nuevo voto
-            $query = "INSERT INTO map_votes (room_id, player_id, map_id) VALUES (?, ?, ?)";
-            $stmt = $this->conn->prepare($query);
-            return $stmt->execute([$roomId, $playerId, $mapId]);
-        }
-    }
-
-    public function getMapVotes($roomId) {
-        $query = "SELECT m.*, COUNT(mv.id) as votes 
-                 FROM maps m 
-                 LEFT JOIN map_votes mv ON m.id = mv.map_id AND mv.room_id = ? 
-                 GROUP BY m.id 
-                 ORDER BY votes DESC, m.name";
-        $stmt = $this->conn->prepare($query);
-        $stmt->execute([$roomId]);
-        return $stmt->fetchAll();
-    }
-
-    public function selectWinningMap($roomId) {
-        $votes = $this->getMapVotes($roomId);
-        if (!empty($votes)) {
-            $winningMap = $votes[0];
-            $room = new GameRoom($this->conn);
-            $room->setSelectedMap($roomId, $winningMap['id']);
-            return $winningMap;
-        }
-        return false;
-    }
-
     public function assignCardsToPlayers($roomId) {
         $players = new Player($this->conn);
         $playersInRoom = $players->getPlayersInRoom($roomId);
