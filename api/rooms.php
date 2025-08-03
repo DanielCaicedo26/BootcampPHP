@@ -1,7 +1,7 @@
 <?php
-// api/rooms.php
 require_once '../config/database.php';
 require_once '../config/session.php';
+require_once '../config/utils.php';
 require_once '../classes/GameRoom.php';
 require_once '../classes/Player.php';
 require_once '../classes/Game.php';
@@ -37,7 +37,6 @@ switch ($method) {
                 } else {
                     jsonResponse(['error' => 'Error al crear la sala'], 500);
                 }
-            
                 break;
                 
             case 'join':
@@ -68,35 +67,19 @@ switch ($method) {
                 }
                 break;
                 
-            case 'vote_map':
+            case 'set_map':
                 $roomId = intval($input['room_id'] ?? 0);
-                $playerId = intval($input['player_id'] ?? 0);
                 $mapId = intval($input['map_id'] ?? 0);
                 
-                if (!$roomId || !$playerId || !$mapId) {
+                if (!$roomId || !$mapId) {
                     jsonResponse(['error' => 'Datos incompletos'], 400);
                 }
                 
-                $success = $game->voteForMap($roomId, $playerId, $mapId);
+                $success = $gameRoom->setSelectedMap($roomId, $mapId);
                 if ($success) {
                     jsonResponse(['success' => true]);
                 } else {
-                    jsonResponse(['error' => 'Error al votar'], 500);
-                }
-                break;
-                
-            case 'start_voting':
-                $roomId = intval($input['room_id'] ?? 0);
-                
-                if (!$roomId) {
-                    jsonResponse(['error' => 'ID de sala requerido'], 400);
-                }
-                
-                $success = $gameRoom->updateRoomStatus($roomId, 'voting');
-                if ($success) {
-                    jsonResponse(['success' => true]);
-                } else {
-                    jsonResponse(['error' => 'Error al iniciar votación'], 500);
+                    jsonResponse(['error' => 'Error al establecer mapa'], 500);
                 }
                 break;
                 
@@ -107,19 +90,25 @@ switch ($method) {
                     jsonResponse(['error' => 'ID de sala requerido'], 400);
                 }
                 
-                // Seleccionar mapa ganador
-                $winningMap = $game->selectWinningMap($roomId);
-                if (!$winningMap) {
-                    jsonResponse(['error' => 'Error al seleccionar mapa'], 500);
+                // Verificar que la sala tenga un mapa seleccionado
+                $room = $gameRoom->getRoomById($roomId);
+                if (!$room || !$room['selected_map_id']) {
+                    jsonResponse(['error' => 'La sala debe tener un mapa seleccionado'], 400);
                 }
                 
                 // Asignar cartas a jugadores
-                $game->assignCardsToPlayers($roomId);
+                $cardsAssigned = $game->assignCardsToPlayers($roomId);
+                if (!$cardsAssigned) {
+                    jsonResponse(['error' => 'Error al asignar cartas'], 500);
+                }
                 
                 // Cambiar estado a jugando
                 $gameRoom->updateRoomStatus($roomId, 'playing');
                 
-                jsonResponse(['success' => true, 'selected_map' => $winningMap]);
+                // Obtener información del mapa seleccionado
+                $selectedMap = $game->getMapById($room['selected_map_id']);
+                
+                jsonResponse(['success' => true, 'selected_map' => $selectedMap]);
                 break;
                 
             case 'play_card':
@@ -173,17 +162,6 @@ switch ($method) {
                 jsonResponse(['maps' => $maps]);
                 break;
                 
-            case 'map_votes':
-                $roomId = intval($_GET['room_id'] ?? 0);
-                
-                if (!$roomId) {
-                    jsonResponse(['error' => 'ID de sala requerido'], 400);
-                }
-                
-                $votes = $game->getMapVotes($roomId);
-                jsonResponse(['votes' => $votes]);
-                break;
-                
             case 'player_cards':
                 $roomId = intval($_GET['room_id'] ?? 0);
                 $playerId = intval($_GET['player_id'] ?? 0);
@@ -196,6 +174,28 @@ switch ($method) {
                 jsonResponse(['cards' => $cards]);
                 break;
                 
+            case 'room_status':
+                $roomId = intval($_GET['room_id'] ?? 0);
+                
+                if (!$roomId) {
+                    jsonResponse(['error' => 'ID de sala requerido'], 400);
+                }
+                
+                $room = $gameRoom->getRoomById($roomId);
+                $players = $player->getPlayersInRoom($roomId);
+                
+                $selectedMap = null;
+                if ($room['selected_map_id']) {
+                    $selectedMap = $game->getMapById($room['selected_map_id']);
+                }
+                
+                jsonResponse([
+                    'room' => $room,
+                    'players' => $players,
+                    'selected_map' => $selectedMap
+                ]);
+                break;
+                
             default:
                 jsonResponse(['error' => 'Acción no válida'], 400);
         }
@@ -204,3 +204,4 @@ switch ($method) {
     default:
         jsonResponse(['error' => 'Método no permitido'], 405);
 }
+?>

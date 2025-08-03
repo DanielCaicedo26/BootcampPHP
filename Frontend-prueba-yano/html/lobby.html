@@ -44,7 +44,7 @@
             <div class="game-setup">
                 <div class="setup-header">
                     <h2>🎮 Configurar Nuevo Juego</h2>
-                    <p>Configura los jugadores y comienza una nueva partida</p>
+                    <p>Configura los jugadores, selecciona un mapa y comienza una nueva partida</p>
                 </div>
 
                 <div class="setup-content">
@@ -74,6 +74,9 @@
                         <!-- Configuración de mapa -->
                         <div class="setup-section">
                             <h3>🗺️ Seleccionar Mapa</h3>
+                            <p style="color: #666; margin-bottom: 15px; font-size: 0.9em;">
+                                Elige el mapa donde se desarrollará la batalla
+                            </p>
                             <div class="maps-grid" id="mapsGrid">
                                 <div class="loading-maps">
                                     <div class="spinner"></div>
@@ -83,17 +86,28 @@
                         </div>
                     </div>
 
+                    <!-- Información del proceso -->
+                    <div class="setup-section" style="margin-top: 30px;">
+                        <h3>📋 Proceso del Juego</h3>
+                        <div style="color: #666; line-height: 1.6;">
+                            <p><strong>1.</strong> Configura los nombres de todos los jugadores</p>
+                            <p><strong>2.</strong> Selecciona el mapa donde se jugará</p>
+                            <p><strong>3.</strong> Se asignarán 8 cartas aleatorias a cada jugador</p>
+                            <p><strong>4.</strong> ¡Comienza la partida!</p>
+                        </div>
+                    </div>
+
                     <!-- Botón para iniciar -->
                     <div class="start-game-section">
                         <button class="start-game-btn" onclick="startLocalGame()">
-                            🚀 ¡Iniciar Juego!
+                            🚀 ¡Crear Sala y Empezar!
                         </button>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Sección de Cartas (igual que antes) -->
+        <!-- Sección de Cartas -->
         <section class="content-section" id="cardsSection">
             <div class="section-header">
                 <h2>🃏 Cartas del Juego</h2>
@@ -124,30 +138,39 @@
             <div class="modal-body">
                 <div class="card-detail">
                     <div class="card-image">
-                        <img id="cardImage" src="" alt="Carta">
+                        <img id="cardImage" src="" alt="Carta" style="display: none;">
+                        <div style="font-size: 4em;">🃏</div>
                     </div>
                     <div class="card-info">
                         <h4 id="cardName">Nombre de la carta</h4>
                         <div class="card-attributes">
                             <div class="attribute">
-                                <span class="attr-label">⚡ Poder:</span>
+                                <span class="attr-label">📏 Altura:</span>
+                                <span class="attr-value" id="cardHeight">0m</span>
+                            </div>
+                            <div class="attribute">
+                                <span class="attr-label">⚡ Fuerza:</span>
                                 <span class="attr-value" id="cardPower">0</span>
                             </div>
                             <div class="attribute">
-                                <span class="attr-label">🛡️ Defensa:</span>
-                                <span class="attr-value" id="cardDefense">0</span>
-                            </div>
-                            <div class="attribute">
                                 <span class="attr-label">🏃 Velocidad:</span>
-                                <span class="attr-value" id="cardSpeed">0</span>
+                                <span class="attr-value" id="cardSpeed">0%</span>
                             </div>
                             <div class="attribute">
-                                <span class="attr-label">🧠 Inteligencia:</span>
-                                <span class="attr-value" id="cardIntelligence">0</span>
+                                <span class="attr-label">🧠 Técnica:</span>
+                                <span class="attr-value" id="cardTechnique">0</span>
+                            </div>
+                            <div class="attribute">
+                                <span class="attr-label">💫 Ki:</span>
+                                <span class="attr-value" id="cardKi">0</span>
+                            </div>
+                            <div class="attribute">
+                                <span class="attr-label">🏆 Peleas Ganadas:</span>
+                                <span class="attr-value" id="cardWins">0</span>
                             </div>
                         </div>
                         <div class="card-description">
-                            <p id="cardDescription">Descripción de la carta...</p>
+                            <p id="cardDescription">Personaje del universo Dragon Ball Z</p>
                         </div>
                     </div>
                 </div>
@@ -159,7 +182,7 @@
     <div class="modal-overlay" id="gameStartModal">
         <div class="modal">
             <div class="modal-header">
-                <h3>🚀 ¿Listo para jugar?</h3>
+                <h3>🚀 ¡Listo para jugar!</h3>
             </div>
             <div class="modal-body">
                 <div class="game-summary">
@@ -171,6 +194,10 @@
                     <div class="summary-item">
                         <span>🗺️ Mapa:</span>
                         <span id="summaryMap">Mapa seleccionado</span>
+                    </div>
+                    <div class="summary-item">
+                        <span>🃏 Cartas por jugador:</span>
+                        <span>8 cartas</span>
                     </div>
                     <div class="summary-players">
                         <h5>Lista de jugadores:</h5>
@@ -184,7 +211,7 @@
                         Cancelar
                     </button>
                     <button class="btn-primary" onclick="confirmStartGame()">
-                        ¡Empezar!
+                        ¡Confirmar y Empezar!
                     </button>
                 </div>
             </div>

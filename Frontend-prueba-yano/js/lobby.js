@@ -7,6 +7,8 @@ const API_ROOMS = '/BootcampPHP/api/rooms.php';
 const API_GAME = '/BootcampPHP/api/game.php';
 
 let currentUser = null;
+let currentRoom = null;
+let currentPlayer = null;
 let cards = [];
 let maps = [];
 let selectedMap = null;
@@ -42,7 +44,6 @@ async function checkAuthStatus() {
             };
             document.getElementById('headerUsername').textContent = data.username;
         } else {
-            // Redirigir al login si no está autenticado
             window.location.href = '../html/index.html';
         }
     } catch (error) {
@@ -77,15 +78,12 @@ async function logout() {
 // ==========================================
 
 function switchSection(section) {
-    // Remover clase active de todos los botones y secciones
     document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
     document.querySelectorAll('.content-section').forEach(sec => sec.classList.remove('active'));
     
-    // Activar el botón y sección seleccionados
     document.getElementById(section + 'Btn').classList.add('active');
     document.getElementById(section + 'Section').classList.add('active');
     
-    // Cargar contenido específico
     if (section === 'cards') {
         loadCards();
     }
@@ -101,7 +99,6 @@ function updatePlayerInputs() {
     
     gameConfig.playerCount = playerCount;
     
-    // Generar campos de entrada para nombres
     let playersHTML = '';
     for (let i = 1; i <= playerCount; i++) {
         playersHTML += `
@@ -115,7 +112,6 @@ function updatePlayerInputs() {
     
     playersNamesContainer.innerHTML = playersHTML;
     
-    // Inicializar array de jugadores
     gameConfig.players = [];
     for (let i = 1; i <= playerCount; i++) {
         gameConfig.players.push({
@@ -138,24 +134,39 @@ async function loadMaps() {
         showLoading(true);
         
         const response = await fetch(`${API_ROOMS}?action=maps`);
+        if (!response.ok) {
+            throw new Error(`Error HTTP: ${response.status}`);
+        }
+        
         const data = await response.json();
         
-        if (data.maps && data.maps.length > 0) {
-            maps = data.maps;
-            renderMaps(maps);
-            
-            // Llenar filtro de mapas para la sección de cartas
-            const mapFilter = document.getElementById('mapFilter');
+        if (!data || typeof data !== 'object') {
+            throw new Error('Respuesta inválida del servidor');
+        }
+        
+        if (!Array.isArray(data.maps)) {
+            throw new Error('Formato de datos inválido');
+        }
+        
+        maps = data.maps;
+        
+        if (maps.length === 0) {
+            showAlert('No hay mapas disponibles en este momento', 'warning');
+        }
+        
+        renderMaps(maps);
+        
+        // Actualizar filtro de mapas
+        const mapFilter = document.getElementById('mapFilter');
+        if (mapFilter) {
             mapFilter.innerHTML = '<option value="">Todos los mapas</option>' +
-                data.maps.map(map => `<option value="${map.id}">${map.name}</option>`).join('');
-        } else {
-            showAlert('No se encontraron mapas disponibles', 'info');
-            renderMaps([]);
+                maps.map(map => `<option value="${map.id}">${map.name}</option>`).join('');
         }
         
     } catch (error) {
-        console.error('Error cargando mapas:', error);
-        showAlert('Error al cargar los mapas', 'error');
+        console.error('Error en loadMaps:', error);
+        showAlert('Error al cargar los mapas: ' + error.message, 'error');
+        renderMaps([]);
     } finally {
         showLoading(false);
     }
@@ -177,20 +188,18 @@ function renderMaps(mapsToRender) {
     
     mapsGrid.innerHTML = mapsToRender.map(map => `
         <div class="map-card" onclick="selectMap(${map.id})" id="map-${map.id}">
-            <div class="map-icon">${map.icon || '🗺️'}</div>
+            <div class="map-icon">🗺️</div>
             <div class="map-name">${map.name}</div>
-            <div class="map-description">${map.description || 'Descripción no disponible'}</div>
+            <div class="map-description">${map.description || 'Mapa del juego Dragon Ball'}</div>
         </div>
     `).join('');
 }
 
 function selectMap(mapId) {
-    // Remover selección anterior
     document.querySelectorAll('.map-card').forEach(card => {
         card.classList.remove('selected');
     });
     
-    // Seleccionar nuevo mapa
     const mapCard = document.getElementById(`map-${mapId}`);
     if (mapCard) {
         mapCard.classList.add('selected');
@@ -199,8 +208,113 @@ function selectMap(mapId) {
     }
 }
 
+// ==========================================
+// FUNCIONES DE SALA Y JUGADORES
+// ==========================================
+
+async function createRoomAndStartGame() {
+    try {
+        showLoading(true);
+        
+        // 1. Crear sala
+        const createResponse = await fetch(`${API_ROOMS}?action=create`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                max_players: gameConfig.playerCount,
+                is_private: true
+            })
+        });
+        
+        const createData = await createResponse.json();
+        
+        if (!createData.success) {
+            throw new Error(createData.error || 'Error al crear la sala');
+        }
+        
+        currentRoom = createData.room;
+        
+        // 2. Añadir todos los jugadores a la sala
+        const addedPlayers = [];
+        for (let player of gameConfig.players) {
+            try {
+                const joinResponse = await fetch(`${API_ROOMS}?action=join`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        room_code: currentRoom.room_code,
+                        player_name: player.name
+                    })
+                });
+                
+                const joinData = await joinResponse.json();
+                
+                if (joinData.success) {
+                    addedPlayers.push({
+                        ...player,
+                        db_id: joinData.player_id,
+                        room_id: joinData.room_id
+                    });
+                    
+                    // Guardar el primer jugador como el jugador actual del usuario
+                    if (addedPlayers.length === 1) {
+                        currentPlayer = addedPlayers[0];
+                    }
+                }
+            } catch (error) {
+                console.error(`Error añadiendo jugador ${player.name}:`, error);
+            }
+        }
+        
+        if (addedPlayers.length === 0) {
+            throw new Error('No se pudo añadir ningún jugador a la sala');
+        }
+        
+        gameConfig.players = addedPlayers;
+        
+        // 3. Establecer el mapa seleccionado directamente
+        const setMapResponse = await fetch(`${API_ROOMS}?action=set_map`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                room_id: currentRoom.id,
+                map_id: selectedMap.id
+            })
+        });
+        
+        const setMapData = await setMapResponse.json();
+        
+        if (!setMapData.success) {
+            throw new Error('Error al establecer el mapa');
+        }
+        
+        // 4. Iniciar el juego y asignar cartas
+        const startResponse = await fetch(`${API_ROOMS}?action=start_game`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                room_id: currentRoom.id
+            })
+        });
+        
+        const startData = await startResponse.json();
+        
+        if (startData.success) {
+            showAlert(`¡Sala creada exitosamente! Código: ${currentRoom.room_code}`, 'success');
+            showGameStartModal();
+        } else {
+            throw new Error(startData.error || 'Error al iniciar el juego');
+        }
+        
+    } catch (error) {
+        console.error('Error en createRoomAndStartGame:', error);
+        showAlert(error.message || 'Error al crear la sala', 'error');
+    } finally {
+        showLoading(false);
+    }
+}
+
 function startLocalGame() {
-    // Validar que todos los campos estén completos
     if (!validateGameConfig()) {
         return;
     }
@@ -213,8 +327,8 @@ function startLocalGame() {
         }
     }
     
-    // Mostrar modal de confirmación
-    showGameStartModal();
+    // Crear sala y empezar proceso
+    createRoomAndStartGame();
 }
 
 function validateGameConfig() {
@@ -240,7 +354,7 @@ function validateGameConfig() {
 function showGameStartModal() {
     // Llenar resumen del juego
     document.getElementById('summaryPlayers').textContent = gameConfig.playerCount;
-    document.getElementById('summaryMap').textContent = selectedMap.name;
+    document.getElementById('summaryMap').textContent = selectedMap ? selectedMap.name : 'No seleccionado';
     
     // Llenar lista de jugadores
     const playersListHTML = gameConfig.players.map(player => 
@@ -260,57 +374,22 @@ async function confirmStartGame() {
     try {
         showLoading(true);
         
-        // Crear sala temporal para el juego local
-        const response = await fetch(`${API_ROOMS}?action=create`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                max_players: gameConfig.playerCount,
-                is_private: true
-            })
-        });
+        showAlert('¡Juego iniciado correctamente! Todos los jugadores tienen sus cartas asignadas.', 'success');
         
-        const data = await response.json();
+        // Aquí podrías redirigir a la pantalla de juego
+        setTimeout(() => {
+            showAlert(`¡El juego está listo en la sala ${currentRoom.room_code}!`, 'success');
+            hideGameStartModal();
+            
+            // Opcional: Mostrar información adicional
+            console.log('Sala creada:', currentRoom);
+            console.log('Jugadores:', gameConfig.players);
+            console.log('Mapa seleccionado:', selectedMap);
+        }, 2000);
         
-        if (data.success) {
-            const roomId = data.room.id;
-            
-            // Añadir todos los jugadores a la sala
-            for (let player of gameConfig.players) {
-                await fetch(`${API_ROOMS}?action=join`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        room_code: data.room.room_code,
-                        player_name: player.name
-                    })
-                });
-            }
-            
-            // Asignar cartas a jugadores
-            await fetch(`${API_ROOMS}?action=start_game`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    room_id: roomId
-                })
-            });
-            
-            showAlert('¡Juego iniciado correctamente!', 'success');
-            
-            // Aquí redirigirías a la pantalla de juego
-            setTimeout(() => {
-                // window.location.href = `game.html?room=${data.room.room_code}`;
-                showAlert('¡El juego está listo! (Redirección a pantalla de juego pendiente)', 'success');
-                hideGameStartModal();
-            }, 2000);
-            
-        } else {
-            showAlert(data.error || 'Error al iniciar el juego', 'error');
-        }
     } catch (error) {
-        console.error('Error iniciando juego:', error);
-        showAlert('Error al iniciar el juego', 'error');
+        console.error('Error confirmando inicio:', error);
+        showAlert('Error al confirmar el inicio del juego', 'error');
     } finally {
         showLoading(false);
     }
@@ -324,127 +403,46 @@ async function loadCards() {
     try {
         showLoading(true);
         
-        // Simular cartas de ejemplo ya que no hay endpoint específico
         const mockCards = [
             {
-                id: 1,
-                name: 'Dragón de Fuego',
-                power: 95,
-                defense: 80,
-                speed: 70,
-                intelligence: 85,
-                description: 'Un poderoso dragón que domina las llamas del inframundo. Su aliento puede derretir el acero más fuerte.',
-                image: null
+                id: 1, name: 'Goku', altura_mts: 1.75, tecnica: 9.5, fuerza: 95, 
+                peleas_ganadas: 150, velocidad_percent: 90, ki: 98,
+                description: 'El Saiyajin más poderoso de la Tierra'
             },
             {
-                id: 2,
-                name: 'Caballero Valiente',
-                power: 75,
-                defense: 90,
-                speed: 60,
-                intelligence: 70,
-                description: 'Un noble caballero con armadura encantada. Su honor y valentía son legendarios en todo el reino.',
-                image: null
+                id: 2, name: 'Vegeta', altura_mts: 1.64, tecnica: 9.2, fuerza: 92, 
+                peleas_ganadas: 140, velocidad_percent: 88, ki: 95,
+                description: 'El Príncipe de los Saiyajin'
             },
             {
-                id: 3,
-                name: 'Mago Ancestral',
-                power: 85,
-                defense: 50,
-                speed: 65,
-                intelligence: 98,
-                description: 'Un sabio mago con conocimientos milenarios. Maestro de todas las escuelas de magia arcana.',
-                image: null
+                id: 3, name: 'Piccolo', altura_mts: 2.26, tecnica: 8.8, fuerza: 80, 
+                peleas_ganadas: 85, velocidad_percent: 75, ki: 90,
+                description: 'El Namekiano guerrero'
             },
             {
-                id: 4,
-                name: 'Arquera Élfica',
-                power: 70,
-                defense: 60,
-                speed: 95,
-                intelligence: 80,
-                description: 'Una élfica con puntería infalible. Sus flechas nunca fallan su objetivo.',
-                image: null
+                id: 4, name: 'Gohan', altura_mts: 1.76, tecnica: 8.8, fuerza: 88, 
+                peleas_ganadas: 80, velocidad_percent: 85, ki: 92,
+                description: 'El hijo de Goku con gran potencial'
             },
             {
-                id: 5,
-                name: 'Troll de Montaña',
-                power: 90,
-                defense: 95,
-                speed: 30,
-                intelligence: 40,
-                description: 'Una criatura gigante de las montañas. Su piel es dura como la roca.',
-                image: null
+                id: 5, name: 'Trunks', altura_mts: 1.70, tecnica: 8.7, fuerza: 85, 
+                peleas_ganadas: 60, velocidad_percent: 92, ki: 88,
+                description: 'El guerrero del futuro'
             },
             {
-                id: 6,
-                name: 'Ninja Sombra',
-                power: 80,
-                defense: 65,
-                speed: 98,
-                intelligence: 85,
-                description: 'Un maestro de las artes marciales y la invisibilidad. Se mueve como el viento nocturno.',
-                image: null
+                id: 6, name: 'Cell', altura_mts: 2.13, tecnica: 9.3, fuerza: 94, 
+                peleas_ganadas: 30, velocidad_percent: 86, ki: 96,
+                description: 'El androide perfecto'
             },
             {
-                id: 7,
-                name: 'Hechicera del Hielo',
-                power: 88,
-                defense: 70,
-                speed: 75,
-                intelligence: 92,
-                description: 'Domina los elementos del frío y la nieve. Puede congelar a sus enemigos con una mirada.',
-                image: null
+                id: 7, name: 'Frieza', altura_mts: 1.58, tecnica: 9.0, fuerza: 89, 
+                peleas_ganadas: 100, velocidad_percent: 83, ki: 94,
+                description: 'El emperador del universo'
             },
             {
-                id: 8,
-                name: 'Guerrero Bárbaro',
-                power: 92,
-                defense: 85,
-                speed: 55,
-                intelligence: 45,
-                description: 'Un feroz guerrero de las tierras salvajes. Su furia en batalla es incontrolable.',
-                image: null
-            },
-            {
-                id: 9,
-                name: 'Sacerdotisa de Luz',
-                power: 65,
-                defense: 75,
-                speed: 70,
-                intelligence: 88,
-                description: 'Una devota sacerdotisa con poderes curativos. Su luz puede purificar cualquier maldad.',
-                image: null
-            },
-            {
-                id: 10,
-                name: 'Demonio de las Sombras',
-                power: 93,
-                defense: 60,
-                speed: 85,
-                intelligence: 75,
-                description: 'Una criatura de pesadilla que emerge de las sombras. Su sola presencia aterroriza a los valientes.',
-                image: null
-            },
-            {
-                id: 11,
-                name: 'Unicornio Místico',
-                power: 70,
-                defense: 80,
-                speed: 90,
-                intelligence: 95,
-                description: 'Una criatura pura y mágica. Su cuerno tiene poderes curativos extraordinarios.',
-                image: null
-            },
-            {
-                id: 12,
-                name: 'Golem de Piedra',
-                power: 85,
-                defense: 98,
-                speed: 25,
-                intelligence: 30,
-                description: 'Un guardián creado con magia antigua. Su cuerpo de piedra es prácticamente indestructible.',
-                image: null
+                id: 8, name: 'Majin Buu', altura_mts: 1.69, tecnica: 7.5, fuerza: 96, 
+                peleas_ganadas: 25, velocidad_percent: 70, ki: 98,
+                description: 'La criatura mágica más poderosa'
             }
         ];
         
@@ -475,28 +473,14 @@ function renderCards(cardsToRender) {
     
     cardsGrid.innerHTML = cardsToRender.map(card => `
         <div class="card-item" onclick="showCardDetails(${card.id})">
-            <div class="card-image">
-                ${card.image ? `<img src="${card.image}" alt="${card.name}">` : '🃏'}
-            </div>
+            <div class="card-image">🃏</div>
             <div class="card-content">
                 <div class="card-name">${card.name}</div>
                 <div class="card-attributes">
-                    <div class="card-attr">
-                        <span>⚡ Poder:</span>
-                        <span>${card.power}</span>
-                    </div>
-                    <div class="card-attr">
-                        <span>🛡️ Defensa:</span>
-                        <span>${card.defense}</span>
-                    </div>
-                    <div class="card-attr">
-                        <span>🏃 Velocidad:</span>
-                        <span>${card.speed}</span>
-                    </div>
-                    <div class="card-attr">
-                        <span>🧠 Inteligencia:</span>
-                        <span>${card.intelligence}</span>
-                    </div>
+                    <div class="card-attr"><span>⚡ Fuerza:</span><span>${card.fuerza}</span></div>
+                    <div class="card-attr"><span>🏃 Velocidad:</span><span>${card.velocidad_percent}%</span></div>
+                    <div class="card-attr"><span>🧠 Técnica:</span><span>${card.tecnica}</span></div>
+                    <div class="card-attr"><span>💫 Ki:</span><span>${card.ki}</span></div>
                 </div>
             </div>
         </div>
@@ -504,16 +488,13 @@ function renderCards(cardsToRender) {
 }
 
 function filterCards() {
-    const mapFilter = document.getElementById('mapFilter').value;
     const searchTerm = document.getElementById('searchCards').value.toLowerCase();
-    
     let filteredCards = cards;
     
-    // Filtrar por búsqueda de texto
     if (searchTerm) {
         filteredCards = filteredCards.filter(card => 
             card.name.toLowerCase().includes(searchTerm) ||
-            card.description.toLowerCase().includes(searchTerm)
+            (card.description && card.description.toLowerCase().includes(searchTerm))
         );
     }
     
@@ -524,23 +505,15 @@ function showCardDetails(cardId) {
     const card = cards.find(c => c.id === cardId);
     if (!card) return;
     
-    // Llenar modal con detalles de la carta
     document.getElementById('cardTitle').textContent = `🃏 ${card.name}`;
     document.getElementById('cardName').textContent = card.name;
-    document.getElementById('cardPower').textContent = card.power;
-    document.getElementById('cardDefense').textContent = card.defense;
-    document.getElementById('cardSpeed').textContent = card.speed;
-    document.getElementById('cardIntelligence').textContent = card.intelligence;
-    document.getElementById('cardDescription').textContent = card.description;
-    
-    const cardImage = document.getElementById('cardImage');
-    if (card.image) {
-        cardImage.src = card.image;
-        cardImage.alt = card.name;
-        cardImage.style.display = 'block';
-    } else {
-        cardImage.style.display = 'none';
-    }
+    document.getElementById('cardHeight').textContent = card.altura_mts + 'm';
+    document.getElementById('cardPower').textContent = card.fuerza;
+    document.getElementById('cardSpeed').textContent = card.velocidad_percent + '%';
+    document.getElementById('cardTechnique').textContent = card.tecnica;
+    document.getElementById('cardKi').textContent = card.ki;
+    document.getElementById('cardWins').textContent = card.peleas_ganadas;
+    document.getElementById('cardDescription').textContent = card.description || 'Personaje del universo Dragon Ball';
     
     showCardDetailsModal();
 }
