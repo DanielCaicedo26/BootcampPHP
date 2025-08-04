@@ -9,7 +9,7 @@ class Game {
     // Obtener todos los mapas
     public function getAllMaps() {
         try {
-            ob_clean(); // Limpiar buffer de salida
+            ob_clean();
             $stmt = $this->db->prepare("SELECT id, name, description, image_url FROM maps");
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -55,13 +55,14 @@ class Game {
         }
     }
 
-    // Inicializar estado del juego
+    // Inicializar estado del juego con turno inicial
     public function initializeGameState($roomId) {
         try {
             $stmt = $this->db->prepare("
                 UPDATE game_rooms 
                 SET current_round = 1,
                     status = 'playing',
+                    current_turn = 1,
                     started_at = NOW()
                 WHERE id = ?
             ");
@@ -118,7 +119,7 @@ class Game {
         }
     }
 
-    // Obtener cartas de un jugador
+    // Obtener cartas de un jugador específico
     public function getPlayerCards($roomId, $playerId) {
         try {
             $stmt = $this->db->prepare("
@@ -137,7 +138,7 @@ class Game {
         }
     }
 
-    // Obtener estado completo del juego
+    // Obtener estado completo del juego con información de turnos
     public function getGameState($roomId) {
         try {
             // Obtener información de la sala
@@ -160,6 +161,9 @@ class Game {
             $stmt->execute([$roomId]);
             $players = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
+            // Obtener el jugador actual del turno
+            $currentPlayer = $this->getCurrentTurnPlayer($roomId);
+            
             // Obtener la ronda actual si existe
             $currentRound = null;
             if ($room['current_round'] > 0) {
@@ -175,7 +179,8 @@ class Game {
                 'room' => $room,
                 'players' => $players,
                 'current_round' => $currentRound,
-                'current_turn' => $this->getCurrentTurn($roomId)
+                'current_player' => $currentPlayer,
+                'total_players' => count($players)
             ];
         } catch (Exception $e) {
             error_log("Error en getGameState: " . $e->getMessage());
@@ -183,41 +188,33 @@ class Game {
                 'room' => null,
                 'players' => [],
                 'current_round' => null,
-                'current_turn' => null
+                'current_player' => null,
+                'total_players' => 0
             ];
         }
     }
 
-    // Obtener turno actual (jugador que debe elegir atributo)
-    private function getCurrentTurn($roomId) {
+    // Obtener el jugador del turno actual
+    public function getCurrentTurnPlayer($roomId) {
         try {
             $stmt = $this->db->prepare("
-                SELECT current_round, current_turn FROM game_rooms WHERE id = ?
+                SELECT current_turn FROM game_rooms WHERE id = ?
             ");
             $stmt->execute([$roomId]);
-            $room = $stmt->fetch(PDO::FETCH_ASSOC);
+            $currentTurn = $stmt->fetchColumn();
             
-            if (!$room) return null;
+            if (!$currentTurn) return null;
             
-            // El turno rota entre jugadores por ronda
+            // Obtener el jugador según el turno
             $stmt = $this->db->prepare("
-                SELECT COUNT(*) as player_count FROM room_players WHERE room_id = ?
+                SELECT id, player_name, player_order 
+                FROM room_players 
+                WHERE room_id = ? AND player_order = ?
             ");
-            $stmt->execute([$roomId]);
-            $playerCount = $stmt->fetchColumn();
-            
-            $currentTurnIndex = ($room['current_round'] - 1) % $playerCount;
-            
-            $stmt = $this->db->prepare("
-                SELECT id, player_name FROM room_players 
-                WHERE room_id = ? 
-                ORDER BY player_order 
-                LIMIT 1 OFFSET ?
-            ");
-            $stmt->execute([$roomId, $currentTurnIndex]);
+            $stmt->execute([$roomId, $currentTurn]);
             return $stmt->fetch(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
-            error_log("Error en getCurrentTurn: " . $e->getMessage());
+            error_log("Error en getCurrentTurnPlayer: " . $e->getMessage());
             return null;
         }
     }
@@ -227,12 +224,12 @@ class Game {
         try {
             $this->db->beginTransaction();
             
-            // Obtener número de ronda actual
-            $stmt = $this->db->prepare("SELECT current_round FROM game_rooms WHERE id = ?");
+            // Obtener información actual del juego
+            $stmt = $this->db->prepare("SELECT current_round, current_turn FROM game_rooms WHERE id = ?");
             $stmt->execute([$roomId]);
-            $currentRound = $stmt->fetchColumn();
+            $gameInfo = $stmt->fetch(PDO::FETCH_ASSOC);
             
-            if ($currentRound > 8) {
+            if ($gameInfo['current_round'] > 8) {
                 $this->db->rollback();
                 return ['error' => 'El juego ya ha terminado'];
             }
@@ -242,7 +239,7 @@ class Game {
                 SELECT id FROM game_rounds 
                 WHERE room_id = ? AND round_number = ? AND winner_player_id IS NULL
             ");
-            $stmt->execute([$roomId, $currentRound]);
+            $stmt->execute([$roomId, $gameInfo['current_round']]);
             $existingRound = $stmt->fetch();
             
             if ($existingRound) {
@@ -258,9 +255,10 @@ class Game {
                 return [
                     'success' => true,
                     'round_id' => $existingRound['id'],
-                    'round_number' => $currentRound,
+                    'round_number' => $gameInfo['current_round'],
                     'selected_attribute' => $selectedAttribute,
-                    'attribute_name' => $this->getAttributeName($selectedAttribute)
+                    'attribute_name' => $this->getAttributeName($selectedAttribute),
+                    'current_turn' => $gameInfo['current_turn']
                 ];
             }
             
@@ -268,12 +266,12 @@ class Game {
             $attributes = ['altura_mts', 'tecnica', 'fuerza', 'peleas_ganadas', 'velocidad_percent', 'ki'];
             $selectedAttribute = $attributes[array_rand($attributes)];
             
-            // Crear nueva ronda - CORREGIDO: insertar el nombre del atributo, no su índice
+            // Crear nueva ronda
             $stmt = $this->db->prepare("
                 INSERT INTO game_rounds (room_id, round_number, selected_attribute)
                 VALUES (?, ?, ?)
             ");
-            $stmt->execute([$roomId, $currentRound, $selectedAttribute]);
+            $stmt->execute([$roomId, $gameInfo['current_round'], $selectedAttribute]);
             $roundId = $this->db->lastInsertId();
             
             $this->db->commit();
@@ -281,9 +279,10 @@ class Game {
             return [
                 'success' => true,
                 'round_id' => $roundId,
-                'round_number' => $currentRound,
+                'round_number' => $gameInfo['current_round'],
                 'selected_attribute' => $selectedAttribute,
-                'attribute_name' => $this->getAttributeName($selectedAttribute)
+                'attribute_name' => $this->getAttributeName($selectedAttribute),
+                'current_turn' => $gameInfo['current_turn']
             ];
         } catch (Exception $e) {
             $this->db->rollback();
@@ -296,6 +295,13 @@ class Game {
     public function playCard($roomId, $playerId, $cardId) {
         try {
             $this->db->beginTransaction();
+            
+            // Verificar que es el turno del jugador correcto
+            $currentPlayer = $this->getCurrentTurnPlayer($roomId);
+            if (!$currentPlayer || $currentPlayer['id'] != $playerId) {
+                $this->db->rollback();
+                return ['error' => 'No es tu turno'];
+            }
             
             // Verificar que la carta pertenece al jugador
             $stmt = $this->db->prepare("
@@ -356,6 +362,9 @@ class Game {
             ");
             $stmt->execute([$roomId, $playerId, $cardId]);
             
+            // Avanzar al siguiente turno
+            $this->advanceToNextTurn($roomId);
+            
             $this->db->commit();
             
             // Verificar si todos los jugadores han jugado
@@ -365,13 +374,40 @@ class Game {
                 'success' => true,
                 'attribute_value' => $attributeValue,
                 'round_complete' => $roundResult !== null,
-                'round_result' => $roundResult
+                'round_result' => $roundResult,
+                'next_player' => $this->getCurrentTurnPlayer($roomId)
             ];
             
         } catch (Exception $e) {
             $this->db->rollback();
             error_log("Error jugando carta: " . $e->getMessage());
             return ['error' => 'Error al jugar la carta: ' . $e->getMessage()];
+        }
+    }
+
+    // Avanzar al siguiente turno
+    private function advanceToNextTurn($roomId) {
+        try {
+            // Obtener número total de jugadores y turno actual
+            $stmt = $this->db->prepare("
+                SELECT COUNT(*) as total_players, current_turn 
+                FROM room_players rp, game_rooms gr 
+                WHERE rp.room_id = ? AND gr.id = ?
+            ");
+            $stmt->execute([$roomId, $roomId]);
+            $info = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            $nextTurn = ($info['current_turn'] % $info['total_players']) + 1;
+            
+            $stmt = $this->db->prepare("
+                UPDATE game_rooms SET current_turn = ? WHERE id = ?
+            ");
+            $stmt->execute([$nextTurn, $roomId]);
+            
+            return true;
+        } catch (Exception $e) {
+            error_log("Error avanzando turno: " . $e->getMessage());
+            return false;
         }
     }
 
@@ -432,7 +468,7 @@ class Game {
                 // Avanzar a la siguiente ronda o terminar juego
                 if ($currentRound < 8) {
                     $stmt = $this->db->prepare("
-                        UPDATE game_rooms SET current_round = current_round + 1 
+                        UPDATE game_rooms SET current_round = current_round + 1, current_turn = 1 
                         WHERE id = ?
                     ");
                     $stmt->execute([$roomId]);
