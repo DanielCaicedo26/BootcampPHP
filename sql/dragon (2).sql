@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 04-08-2025 a las 07:21:24
+-- Tiempo de generación: 04-08-2025 a las 16:12:54
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.0.30
 
@@ -120,6 +120,7 @@ CREATE TABLE `game_rooms` (
   `current_attribute` int(11) DEFAULT 0,
   `current_turn` int(11) DEFAULT 0,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `started_at` timestamp NULL DEFAULT NULL,
   `room_code` varchar(10) NOT NULL DEFAULT ''
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -127,27 +128,49 @@ CREATE TABLE `game_rooms` (
 -- Volcado de datos para la tabla `game_rooms`
 --
 
-INSERT INTO `game_rooms` (`id`, `max_players`, `current_players`, `status`, `selected_map_id`, `current_round`, `current_attribute`, `current_turn`, `created_at`, `room_code`) VALUES
-(4, 7, 7, 'waiting', NULL, 0, 0, 0, '2025-08-04 04:34:07', 'D2MSC0'),
-(5, 7, 7, 'waiting', NULL, 0, 0, 0, '2025-08-04 04:34:19', 'QQ955H'),
-(6, 7, 7, 'waiting', NULL, 0, 0, 0, '2025-08-04 04:34:20', '6A9BDB'),
-(7, 7, 7, 'waiting', NULL, 0, 0, 0, '2025-08-04 04:34:48', '4L8MMF'),
-(8, 7, 7, 'waiting', NULL, 0, 0, 0, '2025-08-04 04:36:24', 'IHC3Q2'),
-(9, 7, 7, 'waiting', NULL, 0, 0, 0, '2025-08-04 04:38:03', 'T4D8PV'),
-(10, 7, 7, 'waiting', NULL, 0, 0, 0, '2025-08-04 04:39:20', 'M0E602'),
-(11, 7, 0, 'waiting', NULL, 0, 0, 0, '2025-08-04 04:42:43', 'CA1HKA'),
-(12, 7, 0, 'waiting', NULL, 0, 0, 0, '2025-08-04 04:42:57', '23CM14'),
-(13, 7, 0, 'waiting', NULL, 0, 0, 0, '2025-08-04 04:49:51', 'KD5XPK'),
-(14, 7, 0, 'waiting', NULL, 0, 0, 0, '2025-08-04 04:49:52', '91NDL5'),
-(15, 7, 0, 'waiting', NULL, 0, 0, 0, '2025-08-04 04:51:01', '3CQC2Y'),
-(16, 7, 0, 'waiting', NULL, 0, 0, 0, '2025-08-04 04:51:02', 'IFJ1DQ'),
-(17, 7, 0, 'waiting', NULL, 0, 0, 0, '2025-08-04 04:51:03', '51R1FT'),
-(18, 7, 0, 'waiting', NULL, 0, 0, 0, '2025-08-04 04:51:18', 'QDMUXM'),
-(19, 7, 0, 'waiting', NULL, 0, 0, 0, '2025-08-04 04:54:44', 'R8CG6W'),
-(20, 7, 0, 'waiting', NULL, 0, 0, 0, '2025-08-04 05:01:25', '6BX03V'),
-(21, 7, 7, 'waiting', NULL, 0, 0, 0, '2025-08-04 05:03:39', 'RZI0AP'),
-(22, 7, 7, 'waiting', NULL, 0, 0, 0, '2025-08-04 05:03:49', '4I6THV'),
-(23, 7, 7, 'waiting', NULL, 0, 0, 0, '2025-08-04 05:12:32', 'NVO15Q');
+INSERT INTO `game_rooms` (`id`, `max_players`, `current_players`, `status`, `selected_map_id`, `current_round`, `current_attribute`, `current_turn`, `created_at`, `started_at`, `room_code`) VALUES
+(4, 7, 7, 'waiting', NULL, 0, 0, 0, '2025-08-04 04:34:07', NULL, 'D2MSC0'),
+(5, 7, 7, 'waiting', NULL, 0, 0, 0, '2025-08-04 04:34:19', NULL, 'QQ955H'),
+(6, 7, 7, 'waiting', NULL, 0, 0, 0, '2025-08-04 04:34:20', NULL, '6A9BDB'),
+(7, 7, 7, 'waiting', NULL, 0, 0, 0, '2025-08-04 04:34:48', NULL, '4L8MMF'),
+(8, 7, 7, 'waiting', NULL, 0, 0, 0, '2025-08-04 04:36:24', NULL, 'IHC3Q2'),
+(9, 7, 7, 'waiting', NULL, 0, 0, 0, '2025-08-04 04:38:03', NULL, 'T4D8PV'),
+(10, 7, 7, 'waiting', NULL, 0, 0, 0, '2025-08-04 04:39:20', NULL, 'M0E602'),
+(11, 7, 0, 'waiting', NULL, 0, 0, 0, '2025-08-04 04:42:43', NULL, 'CA1HKA'),
+(12, 7, 0, 'waiting', NULL, 0, 0, 0, '2025-08-04 04:42:57', NULL, '23CM14'),
+(13, 7, 0, 'waiting', NULL, 0, 0, 0, '2025-08-04 04:49:51', NULL, 'KD5XPK'),
+(14, 7, 0, 'waiting', NULL, 0, 0, 0, '2025-08-04 04:49:52', NULL, '91NDL5'),
+(15, 7, 0, 'waiting', NULL, 0, 0, 0, '2025-08-04 04:51:01', NULL, '3CQC2Y'),
+(16, 7, 0, 'waiting', NULL, 0, 0, 0, '2025-08-04 04:51:02', NULL, 'IFJ1DQ'),
+(17, 7, 0, 'waiting', NULL, 0, 0, 0, '2025-08-04 04:51:03', NULL, '51R1FT'),
+(18, 7, 0, 'waiting', NULL, 0, 0, 0, '2025-08-04 04:51:18', NULL, 'QDMUXM'),
+(19, 7, 0, 'waiting', NULL, 0, 0, 0, '2025-08-04 04:54:44', NULL, 'R8CG6W'),
+(20, 7, 0, 'waiting', NULL, 0, 0, 0, '2025-08-04 05:01:25', NULL, '6BX03V'),
+(21, 7, 7, 'waiting', NULL, 0, 0, 0, '2025-08-04 05:03:39', NULL, 'RZI0AP'),
+(22, 7, 7, 'waiting', NULL, 0, 0, 0, '2025-08-04 05:03:49', NULL, '4I6THV'),
+(23, 7, 7, 'waiting', NULL, 0, 0, 0, '2025-08-04 05:12:32', NULL, 'NVO15Q'),
+(24, 7, 7, 'waiting', NULL, 0, 0, 0, '2025-08-04 05:30:07', NULL, 'A8M7LA'),
+(25, 7, 7, 'waiting', NULL, 0, 0, 0, '2025-08-04 12:31:52', NULL, 'MNU61Y'),
+(26, 7, 7, 'waiting', NULL, 0, 0, 0, '2025-08-04 12:31:54', NULL, '6MMN5B'),
+(27, 7, 7, 'waiting', 1, 0, 0, 0, '2025-08-04 12:36:09', NULL, 'S9FNOT'),
+(28, 7, 7, 'waiting', 1, 0, 0, 0, '2025-08-04 12:36:20', NULL, 'JXW2NP'),
+(29, 7, 7, 'waiting', 1, 0, 0, 0, '2025-08-04 12:42:12', NULL, 'HSJVFY'),
+(30, 7, 7, 'waiting', NULL, 0, 0, 0, '2025-08-04 12:53:17', NULL, 'ESHCS4'),
+(31, 7, 7, 'waiting', NULL, 0, 0, 0, '2025-08-04 13:03:11', NULL, 'H4O3H2'),
+(32, 7, 7, 'waiting', NULL, 0, 0, 0, '2025-08-04 13:03:41', NULL, 'YQ0WGA'),
+(33, 7, 7, 'waiting', NULL, 0, 0, 0, '2025-08-04 13:05:07', NULL, '037FR7'),
+(34, 7, 7, 'waiting', NULL, 0, 0, 0, '2025-08-04 13:05:23', NULL, 'N2N8PY'),
+(35, 2, 2, 'waiting', NULL, 0, 0, 0, '2025-08-04 13:06:16', NULL, 'ISQJKU'),
+(36, 7, 7, 'waiting', NULL, 0, 0, 0, '2025-08-04 13:22:54', NULL, '58JUWZ'),
+(37, 2, 2, 'waiting', NULL, 0, 0, 0, '2025-08-04 13:23:15', NULL, '7CR9HK'),
+(38, 2, 0, 'waiting', NULL, 0, 0, 0, '2025-08-04 13:29:31', NULL, 'HIH5LG'),
+(39, 7, 0, 'waiting', NULL, 0, 0, 0, '2025-08-04 13:33:19', NULL, 'ELIPXB'),
+(40, 2, 0, 'waiting', NULL, 0, 0, 0, '2025-08-04 13:37:58', NULL, 'Z6OJBZ'),
+(41, 2, 2, 'waiting', NULL, 0, 0, 0, '2025-08-04 13:39:40', NULL, '8FHW7Z'),
+(42, 7, 7, 'waiting', NULL, 0, 0, 0, '2025-08-04 13:41:26', NULL, 'FNSCY6'),
+(43, 2, 2, 'waiting', NULL, 0, 0, 0, '2025-08-04 13:44:19', NULL, 'Y2VD86'),
+(44, 2, 2, 'waiting', NULL, 0, 0, 0, '2025-08-04 13:50:03', NULL, 'T5PGAL'),
+(45, 2, 2, 'playing', 1, 1, 0, 0, '2025-08-04 14:10:17', '2025-08-04 14:10:17', 'A6PGPH');
 
 -- --------------------------------------------------------
 
@@ -159,10 +182,17 @@ CREATE TABLE `game_rounds` (
   `id` int(11) NOT NULL,
   `room_id` int(11) NOT NULL,
   `round_number` int(11) NOT NULL,
-  `selected_attribute` int(11) NOT NULL,
+  `selected_attribute` varchar(50) NOT NULL,
   `winner_player_id` int(11) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `game_rounds`
+--
+
+INSERT INTO `game_rounds` (`id`, `room_id`, `round_number`, `selected_attribute`, `winner_player_id`, `created_at`) VALUES
+(1, 45, 1, 'altura_mts', NULL, '2025-08-04 14:10:36');
 
 -- --------------------------------------------------------
 
@@ -200,6 +230,28 @@ CREATE TABLE `player_cards` (
   `is_used` tinyint(1) DEFAULT 0,
   `assigned_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `player_cards`
+--
+
+INSERT INTO `player_cards` (`id`, `room_id`, `player_id`, `card_id`, `is_used`, `assigned_at`) VALUES
+(1, 45, 172, 27, 0, '2025-08-04 14:10:17'),
+(2, 45, 172, 13, 0, '2025-08-04 14:10:17'),
+(3, 45, 172, 55, 0, '2025-08-04 14:10:17'),
+(4, 45, 172, 46, 0, '2025-08-04 14:10:17'),
+(5, 45, 172, 6, 1, '2025-08-04 14:10:17'),
+(6, 45, 172, 36, 0, '2025-08-04 14:10:17'),
+(7, 45, 172, 29, 0, '2025-08-04 14:10:17'),
+(8, 45, 172, 43, 0, '2025-08-04 14:10:17'),
+(9, 45, 173, 48, 0, '2025-08-04 14:10:17'),
+(10, 45, 173, 39, 0, '2025-08-04 14:10:17'),
+(11, 45, 173, 51, 0, '2025-08-04 14:10:17'),
+(12, 45, 173, 32, 0, '2025-08-04 14:10:17'),
+(13, 45, 173, 25, 0, '2025-08-04 14:10:17'),
+(14, 45, 173, 58, 0, '2025-08-04 14:10:17'),
+(15, 45, 173, 28, 0, '2025-08-04 14:10:17'),
+(16, 45, 173, 47, 0, '2025-08-04 14:10:17');
 
 -- --------------------------------------------------------
 
@@ -291,7 +343,110 @@ INSERT INTO `room_players` (`id`, `room_id`, `player_name`, `user_id`, `player_o
 (67, 23, 'Jugador 4', NULL, 4, 0, '2025-08-04 05:12:33'),
 (68, 23, 'Jugador 5', NULL, 5, 0, '2025-08-04 05:12:33'),
 (69, 23, 'Jugador 6', NULL, 6, 0, '2025-08-04 05:12:33'),
-(70, 23, 'Jugador 7', NULL, 7, 0, '2025-08-04 05:12:33');
+(70, 23, 'Jugador 7', NULL, 7, 0, '2025-08-04 05:12:33'),
+(71, 24, 'Jugador 1', NULL, 1, 0, '2025-08-04 05:30:07'),
+(72, 24, 'Jugador 2', NULL, 2, 0, '2025-08-04 05:30:07'),
+(73, 24, 'Jugador 3', NULL, 3, 0, '2025-08-04 05:30:07'),
+(74, 24, 'Jugador 4', NULL, 4, 0, '2025-08-04 05:30:07'),
+(75, 24, 'Jugador 5', NULL, 5, 0, '2025-08-04 05:30:07'),
+(76, 24, 'Jugador 6', NULL, 6, 0, '2025-08-04 05:30:07'),
+(77, 24, 'Jugador 7', NULL, 7, 0, '2025-08-04 05:30:07'),
+(78, 25, 'Jugador 1', NULL, 1, 0, '2025-08-04 12:31:53'),
+(79, 25, 'Jugador 2', NULL, 2, 0, '2025-08-04 12:31:53'),
+(80, 25, 'Jugador 3', NULL, 3, 0, '2025-08-04 12:31:53'),
+(81, 25, 'Jugador 4', NULL, 4, 0, '2025-08-04 12:31:53'),
+(82, 25, 'Jugador 5', NULL, 5, 0, '2025-08-04 12:31:53'),
+(83, 25, 'Jugador 6', NULL, 6, 0, '2025-08-04 12:31:53'),
+(84, 25, 'Jugador 7', NULL, 7, 0, '2025-08-04 12:31:53'),
+(85, 26, 'Jugador 1', NULL, 1, 0, '2025-08-04 12:31:54'),
+(86, 26, 'Jugador 2', NULL, 2, 0, '2025-08-04 12:31:54'),
+(87, 26, 'Jugador 3', NULL, 3, 0, '2025-08-04 12:31:54'),
+(88, 26, 'Jugador 4', NULL, 4, 0, '2025-08-04 12:31:54'),
+(89, 26, 'Jugador 5', NULL, 5, 0, '2025-08-04 12:31:54'),
+(90, 26, 'Jugador 6', NULL, 6, 0, '2025-08-04 12:31:54'),
+(91, 26, 'Jugador 7', NULL, 7, 0, '2025-08-04 12:31:54'),
+(92, 27, 'Jugador 1', NULL, 1, 0, '2025-08-04 12:36:09'),
+(93, 27, 'Jugador 2', NULL, 2, 0, '2025-08-04 12:36:09'),
+(94, 27, 'Jugador 3', NULL, 3, 0, '2025-08-04 12:36:09'),
+(95, 27, 'Jugador 4', NULL, 4, 0, '2025-08-04 12:36:10'),
+(96, 27, 'Jugador 5', NULL, 5, 0, '2025-08-04 12:36:10'),
+(97, 27, 'Jugador 6', NULL, 6, 0, '2025-08-04 12:36:10'),
+(98, 27, 'Jugador 7', NULL, 7, 0, '2025-08-04 12:36:10'),
+(99, 28, 'Jugador 1', NULL, 1, 0, '2025-08-04 12:36:20'),
+(100, 28, 'Jugador 2', NULL, 2, 0, '2025-08-04 12:36:20'),
+(101, 28, 'Jugador 3', NULL, 3, 0, '2025-08-04 12:36:20'),
+(102, 28, 'Jugador 4', NULL, 4, 0, '2025-08-04 12:36:20'),
+(103, 28, 'Jugador 5', NULL, 5, 0, '2025-08-04 12:36:20'),
+(104, 28, 'Jugador 6', NULL, 6, 0, '2025-08-04 12:36:20'),
+(105, 28, 'Jugador 7', NULL, 7, 0, '2025-08-04 12:36:20'),
+(106, 29, 'Jugador 1', NULL, 1, 0, '2025-08-04 12:42:12'),
+(107, 29, 'Jugador 2', NULL, 2, 0, '2025-08-04 12:42:12'),
+(108, 29, 'Jugador 3', NULL, 3, 0, '2025-08-04 12:42:12'),
+(109, 29, 'Jugador9', NULL, 4, 0, '2025-08-04 12:42:12'),
+(110, 29, 'Jugador 5', NULL, 5, 0, '2025-08-04 12:42:12'),
+(111, 29, 'Jugador 6', NULL, 6, 0, '2025-08-04 12:42:12'),
+(112, 29, 'Jugador 7', NULL, 7, 0, '2025-08-04 12:42:12'),
+(113, 30, 'Jugador 1', NULL, 1, 0, '2025-08-04 12:53:17'),
+(114, 30, 'Jugador 2', NULL, 2, 0, '2025-08-04 12:53:17'),
+(115, 30, 'Jugador 3', NULL, 3, 0, '2025-08-04 12:53:17'),
+(116, 30, 'Jugador 4', NULL, 4, 0, '2025-08-04 12:53:17'),
+(117, 30, 'Jugador 5', NULL, 5, 0, '2025-08-04 12:53:17'),
+(118, 30, 'Jugador 6', NULL, 6, 0, '2025-08-04 12:53:17'),
+(119, 30, 'Jugador 7', NULL, 7, 0, '2025-08-04 12:53:17'),
+(120, 31, 'Jugador 1', NULL, 1, 0, '2025-08-04 13:03:11'),
+(121, 31, 'Jugador 2', NULL, 2, 0, '2025-08-04 13:03:11'),
+(122, 31, 'Jugador 3', NULL, 3, 0, '2025-08-04 13:03:11'),
+(123, 31, 'Jugador 4', NULL, 4, 0, '2025-08-04 13:03:11'),
+(124, 31, 'Jugador 5', NULL, 5, 0, '2025-08-04 13:03:11'),
+(125, 31, 'Jugador 6', NULL, 6, 0, '2025-08-04 13:03:11'),
+(126, 31, 'Jugador 7', NULL, 7, 0, '2025-08-04 13:03:11'),
+(127, 32, 'Jugador 1', NULL, 1, 0, '2025-08-04 13:03:41'),
+(128, 32, 'Jugador 2', NULL, 2, 0, '2025-08-04 13:03:41'),
+(129, 32, 'Jugador 3', NULL, 3, 0, '2025-08-04 13:03:41'),
+(130, 32, 'Jugador 4', NULL, 4, 0, '2025-08-04 13:03:41'),
+(131, 32, 'Jugador 5', NULL, 5, 0, '2025-08-04 13:03:41'),
+(132, 32, 'Jugador 6', NULL, 6, 0, '2025-08-04 13:03:41'),
+(133, 32, 'Jugador 7', NULL, 7, 0, '2025-08-04 13:03:41'),
+(134, 33, 'Jugador 1', NULL, 1, 0, '2025-08-04 13:05:07'),
+(135, 33, 'Jugador 2', NULL, 2, 0, '2025-08-04 13:05:07'),
+(136, 33, 'Jugador 3', NULL, 3, 0, '2025-08-04 13:05:07'),
+(137, 33, 'Jugador 4', NULL, 4, 0, '2025-08-04 13:05:07'),
+(138, 33, 'Jugador 5', NULL, 5, 0, '2025-08-04 13:05:07'),
+(139, 33, 'Jugador 6', NULL, 6, 0, '2025-08-04 13:05:07'),
+(140, 33, 'Jugador 7', NULL, 7, 0, '2025-08-04 13:05:07'),
+(141, 34, 'Jugador 1', NULL, 1, 0, '2025-08-04 13:05:23'),
+(142, 34, 'Jugador 2', NULL, 2, 0, '2025-08-04 13:05:23'),
+(143, 34, 'Jugador 3', NULL, 3, 0, '2025-08-04 13:05:23'),
+(144, 34, 'Jugador 4', NULL, 4, 0, '2025-08-04 13:05:23'),
+(145, 34, 'Jugador 5', NULL, 5, 0, '2025-08-04 13:05:23'),
+(146, 34, 'Jugador 6', NULL, 6, 0, '2025-08-04 13:05:23'),
+(147, 34, 'Jugador 7', NULL, 7, 0, '2025-08-04 13:05:23'),
+(148, 35, 'Jugador 1', NULL, 1, 0, '2025-08-04 13:06:16'),
+(149, 35, 'Jugador 2', NULL, 2, 0, '2025-08-04 13:06:16'),
+(150, 36, 'Jugador 1', NULL, 1, 0, '2025-08-04 13:22:54'),
+(151, 36, 'Jugador 2', NULL, 2, 0, '2025-08-04 13:22:54'),
+(152, 36, 'Jugador 3', NULL, 3, 0, '2025-08-04 13:22:54'),
+(153, 36, 'Jugador 4', NULL, 4, 0, '2025-08-04 13:22:54'),
+(154, 36, 'Jugador 5', NULL, 5, 0, '2025-08-04 13:22:54'),
+(155, 36, 'Jugador 6', NULL, 6, 0, '2025-08-04 13:22:54'),
+(156, 36, 'Jugador 7', NULL, 7, 0, '2025-08-04 13:22:54'),
+(157, 37, 'Jugador 1', NULL, 1, 0, '2025-08-04 13:23:15'),
+(158, 37, 'Jugador 2', NULL, 2, 0, '2025-08-04 13:23:15'),
+(159, 41, 'Jugador 1', NULL, 1, 0, '2025-08-04 13:39:40'),
+(160, 41, 'Jugador 2', NULL, 2, 0, '2025-08-04 13:39:40'),
+(161, 42, 'Jugador 1', NULL, 1, 0, '2025-08-04 13:41:26'),
+(162, 42, 'Jugador 2', NULL, 2, 0, '2025-08-04 13:41:26'),
+(163, 42, 'Jugador 3', NULL, 3, 0, '2025-08-04 13:41:26'),
+(164, 42, 'Jugador 4', NULL, 4, 0, '2025-08-04 13:41:26'),
+(165, 42, 'Jugador 5', NULL, 5, 0, '2025-08-04 13:41:26'),
+(166, 42, 'Jugador 6', NULL, 6, 0, '2025-08-04 13:41:26'),
+(167, 42, 'Jugador 7', NULL, 7, 0, '2025-08-04 13:41:27'),
+(168, 43, 'Jugador 1', NULL, 1, 0, '2025-08-04 13:44:19'),
+(169, 43, 'Jugador 2', NULL, 2, 0, '2025-08-04 13:44:19'),
+(170, 44, 'dsf', NULL, 1, 0, '2025-08-04 13:50:03'),
+(171, 44, 'sdf', NULL, 2, 0, '2025-08-04 13:50:03'),
+(172, 45, 'Jugador 1', NULL, 1, 0, '2025-08-04 14:10:17'),
+(173, 45, 'Jugador 2', NULL, 2, 0, '2025-08-04 14:10:17');
 
 -- --------------------------------------------------------
 
@@ -307,6 +462,13 @@ CREATE TABLE `round_cards` (
   `attribute_value` int(11) NOT NULL,
   `played_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `round_cards`
+--
+
+INSERT INTO `round_cards` (`id`, `round_id`, `player_id`, `card_id`, `attribute_value`, `played_at`) VALUES
+(1, 1, 172, 6, 2, '2025-08-04 14:11:30');
 
 -- --------------------------------------------------------
 
@@ -353,8 +515,8 @@ ALTER TABLE `game_rooms`
 --
 ALTER TABLE `game_rounds`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `room_id` (`room_id`),
-  ADD KEY `winner_player_id` (`winner_player_id`);
+  ADD KEY `winner_player_id` (`winner_player_id`),
+  ADD KEY `idx_room_round` (`room_id`,`round_number`);
 
 --
 -- Indices de la tabla `maps`
@@ -367,9 +529,10 @@ ALTER TABLE `maps`
 --
 ALTER TABLE `player_cards`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `room_id` (`room_id`),
   ADD KEY `player_id` (`player_id`),
-  ADD KEY `card_id` (`card_id`);
+  ADD KEY `card_id` (`card_id`),
+  ADD KEY `idx_room_player` (`room_id`,`player_id`),
+  ADD KEY `idx_unused_cards` (`room_id`,`player_id`,`is_used`);
 
 --
 -- Indices de la tabla `room_players`
@@ -384,9 +547,9 @@ ALTER TABLE `room_players`
 --
 ALTER TABLE `round_cards`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `round_id` (`round_id`),
   ADD KEY `player_id` (`player_id`),
-  ADD KEY `card_id` (`card_id`);
+  ADD KEY `card_id` (`card_id`),
+  ADD KEY `idx_round_player` (`round_id`,`player_id`);
 
 --
 -- Indices de la tabla `users`
@@ -409,13 +572,13 @@ ALTER TABLE `cards`
 -- AUTO_INCREMENT de la tabla `game_rooms`
 --
 ALTER TABLE `game_rooms`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=24;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=46;
 
 --
 -- AUTO_INCREMENT de la tabla `game_rounds`
 --
 ALTER TABLE `game_rounds`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT de la tabla `maps`
@@ -427,19 +590,19 @@ ALTER TABLE `maps`
 -- AUTO_INCREMENT de la tabla `player_cards`
 --
 ALTER TABLE `player_cards`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
 
 --
 -- AUTO_INCREMENT de la tabla `room_players`
 --
 ALTER TABLE `room_players`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=71;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=174;
 
 --
 -- AUTO_INCREMENT de la tabla `round_cards`
 --
 ALTER TABLE `round_cards`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT de la tabla `users`
