@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 04-08-2025 a las 05:40:20
+-- Tiempo de generación: 04-08-2025 a las 07:21:24
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.0.30
 
@@ -44,16 +44,16 @@ CREATE TABLE `cards` (
 --
 
 INSERT INTO `cards` (`id`, `name`, `altura_mts`, `tecnica`, `fuerza`, `peleas_ganadas`, `velocidad_percent`, `ki`, `image_url`) VALUES
-(1, 'Goku', 1.75, 9.500, 95, 87, 92, 98, 'https://vignette.wikia.nocookie.net/dragonball/images/b/bc/Planeta_del_Kaio_del_Norte.png/revision/latest/scale-to-width-down/2000?cb=20200826145834&path-prefix=es'),
-(2, 'Vegeta', 1.64, 9.200, 92, 78, 90, 95, '/images/cards/vegeta.jpg'),
-(3, 'Gohan', 1.76, 8.800, 88, 45, 85, 92, '/images/cards/gohan.jpg'),
-(4, 'Goten', 1.23, 7.500, 75, 32, 88, 85, '/images/cards/goten.jpg'),
-(5, 'Trunks', 1.29, 7.800, 78, 35, 90, 87, '/images/cards/trunks.jpg'),
-(6, 'Future Trunks', 1.70, 8.500, 85, 52, 88, 89, '/images/cards/future_trunks.jpg'),
-(7, 'Bardock', 1.78, 8.200, 82, 89, 85, 86, '/images/cards/bardock.jpg'),
-(8, 'Raditz', 1.85, 6.800, 78, 25, 82, 75, '/images/cards/raditz.jpg'),
-(9, 'Nappa', 2.02, 6.500, 88, 67, 65, 72, '/images/cards/nappa.jpg'),
-(10, 'Broly', 2.30, 7.200, 98, 45, 75, 96, '/images/cards/broly.jpg'),
+(1, 'Goku', 1.75, 9.500, 95, 87, 92, 98, '/BootcampPHP/assets/images/cards/goku.jpg'),
+(2, 'Vegeta', 1.64, 9.200, 92, 78, 90, 95, '/BootcampPHP/assets/images/cards/vegeta.jpg'),
+(3, 'Gohan', 1.76, 8.800, 88, 45, 85, 92, '/BootcampPHP/assets/images/cards/gohan.jpg'),
+(4, 'Goten', 1.23, 7.500, 75, 32, 88, 85, '/BootcampPHP/assets/images/cards/goten.jpg'),
+(5, 'Trunks', 1.29, 7.800, 78, 35, 90, 87, '/BootcampPHP/assets/images/cards/trunks.jpg'),
+(6, 'Future Trunks', 1.70, 8.500, 85, 52, 88, 89, '/BootcampPHP/assets/images/cards/future_trunks.jpg'),
+(7, 'Bardock', 1.78, 8.200, 82, 89, 85, 86, '/BootcampPHP/assets/images/cards/bardock.jpg'),
+(8, 'Raditz', 1.85, 6.800, 78, 25, 82, 75, '/BootcampPHP/assets/images/cards/raditz.jpg'),
+(9, 'Nappa', 2.02, 6.500, 88, 67, 65, 72, '/BootcampPHP/assets/images/cards/nappa.jpg'),
+(10, 'Broly', 2.30, 7.200, 98, 45, 75, 96, '/BootcampPHP/assets/images/cards/broly.jpg'),
 (11, 'Piccolo', 2.26, 9.000, 85, 68, 80, 88, '/images/cards/piccolo.jpg'),
 (12, 'Krillin', 1.53, 8.500, 65, 48, 85, 70, '/images/cards/krillin.jpg'),
 (13, 'Yamcha', 1.83, 7.200, 58, 35, 78, 52, '/images/cards/yamcha.jpg'),
@@ -119,8 +119,35 @@ CREATE TABLE `game_rooms` (
   `current_round` int(11) DEFAULT 0,
   `current_attribute` int(11) DEFAULT 0,
   `current_turn` int(11) DEFAULT 0,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `room_code` varchar(10) NOT NULL DEFAULT ''
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `game_rooms`
+--
+
+INSERT INTO `game_rooms` (`id`, `max_players`, `current_players`, `status`, `selected_map_id`, `current_round`, `current_attribute`, `current_turn`, `created_at`, `room_code`) VALUES
+(4, 7, 7, 'waiting', NULL, 0, 0, 0, '2025-08-04 04:34:07', 'D2MSC0'),
+(5, 7, 7, 'waiting', NULL, 0, 0, 0, '2025-08-04 04:34:19', 'QQ955H'),
+(6, 7, 7, 'waiting', NULL, 0, 0, 0, '2025-08-04 04:34:20', '6A9BDB'),
+(7, 7, 7, 'waiting', NULL, 0, 0, 0, '2025-08-04 04:34:48', '4L8MMF'),
+(8, 7, 7, 'waiting', NULL, 0, 0, 0, '2025-08-04 04:36:24', 'IHC3Q2'),
+(9, 7, 7, 'waiting', NULL, 0, 0, 0, '2025-08-04 04:38:03', 'T4D8PV'),
+(10, 7, 7, 'waiting', NULL, 0, 0, 0, '2025-08-04 04:39:20', 'M0E602'),
+(11, 7, 0, 'waiting', NULL, 0, 0, 0, '2025-08-04 04:42:43', 'CA1HKA'),
+(12, 7, 0, 'waiting', NULL, 0, 0, 0, '2025-08-04 04:42:57', '23CM14'),
+(13, 7, 0, 'waiting', NULL, 0, 0, 0, '2025-08-04 04:49:51', 'KD5XPK'),
+(14, 7, 0, 'waiting', NULL, 0, 0, 0, '2025-08-04 04:49:52', '91NDL5'),
+(15, 7, 0, 'waiting', NULL, 0, 0, 0, '2025-08-04 04:51:01', '3CQC2Y'),
+(16, 7, 0, 'waiting', NULL, 0, 0, 0, '2025-08-04 04:51:02', 'IFJ1DQ'),
+(17, 7, 0, 'waiting', NULL, 0, 0, 0, '2025-08-04 04:51:03', '51R1FT'),
+(18, 7, 0, 'waiting', NULL, 0, 0, 0, '2025-08-04 04:51:18', 'QDMUXM'),
+(19, 7, 0, 'waiting', NULL, 0, 0, 0, '2025-08-04 04:54:44', 'R8CG6W'),
+(20, 7, 0, 'waiting', NULL, 0, 0, 0, '2025-08-04 05:01:25', '6BX03V'),
+(21, 7, 7, 'waiting', NULL, 0, 0, 0, '2025-08-04 05:03:39', 'RZI0AP'),
+(22, 7, 7, 'waiting', NULL, 0, 0, 0, '2025-08-04 05:03:49', '4I6THV'),
+(23, 7, 7, 'waiting', NULL, 0, 0, 0, '2025-08-04 05:12:32', 'NVO15Q');
 
 -- --------------------------------------------------------
 
@@ -155,10 +182,9 @@ CREATE TABLE `maps` (
 --
 
 INSERT INTO `maps` (`id`, `name`, `description`, `image_url`) VALUES
-(1, 'Planeta Tierra', 'El hogar de Goku y los Guerreros Z', 'https://xombit.com/files/2014/05/casa-son-goku.jpg'),
-(2, 'Planeta Namek', 'Mundo natal de Piccolo y las Esferas del Dragón originales', 'https://i.pinimg.com/originals/5c/6d/5f/5c6d5ffd63ffc761e8a965366b986f68.jpg'),
-(3, 'Planeta Vegeta', 'El planeta destruido de la raza Saiyajin', 'https://animerant.com.br/wp-content/uploads/2023/12/Dragon-Ball-Super-1.webp'),
-(4, 'Planeta Kaio', 'Pequeño planeta del Kaio del Norte', 'https://vignette.wikia.nocookie.net/dragonball/images/b/bc/Planeta_del_Kaio_del_Norte.png/revision/latest/scale-to-width-down/2000?cb=20200826145834&path-prefix=es');
+(1, 'Planeta Tierra', 'El hogar de Goku y los Guerreros Z', 'https://www.dzoom.org.es/wp-content/uploads/2017/07/seebensee-2384369-810x540.jpg'),
+(2, 'Planeta Namek', 'Mundo natal de Piccolo y las Esferas del Dragón originales', 'https://www.dzoom.org.es/wp-content/uploads/2017/07/seebensee-2384369-810x540.jpg'),
+(3, 'Planeta Vegeta', 'El planeta destruido de la raza Saiyajin', 'https://www.dzoom.org.es/wp-content/uploads/2017/07/seebensee-2384369-810x540.jpg');
 
 -- --------------------------------------------------------
 
@@ -190,6 +216,82 @@ CREATE TABLE `room_players` (
   `score` int(11) DEFAULT 0,
   `joined_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `room_players`
+--
+
+INSERT INTO `room_players` (`id`, `room_id`, `player_name`, `user_id`, `player_order`, `score`, `joined_at`) VALUES
+(1, 4, 'Jugador 1', 2, 1, 0, '2025-08-04 04:34:07'),
+(2, 4, 'Jugador 2', 2, 2, 0, '2025-08-04 04:34:07'),
+(3, 4, 'Jugador 3', 2, 3, 0, '2025-08-04 04:34:07'),
+(4, 4, 'Jugador 4', 2, 4, 0, '2025-08-04 04:34:07'),
+(5, 4, 'Jugador 5', 2, 5, 0, '2025-08-04 04:34:07'),
+(6, 4, 'Jugador 6', 2, 6, 0, '2025-08-04 04:34:07'),
+(7, 4, 'Jugador 7', 2, 7, 0, '2025-08-04 04:34:07'),
+(8, 5, 'Jugador 1', 2, 1, 0, '2025-08-04 04:34:19'),
+(9, 5, 'Jugador 2', 2, 2, 0, '2025-08-04 04:34:19'),
+(10, 5, 'Jugador 3', 2, 3, 0, '2025-08-04 04:34:19'),
+(11, 5, 'Jugador 4', 2, 4, 0, '2025-08-04 04:34:19'),
+(12, 5, 'Jugador 5', 2, 5, 0, '2025-08-04 04:34:19'),
+(13, 5, 'Jugador 6', 2, 6, 0, '2025-08-04 04:34:19'),
+(14, 5, 'Jugador 7', 2, 7, 0, '2025-08-04 04:34:19'),
+(15, 6, 'Jugador 1', 2, 1, 0, '2025-08-04 04:34:20'),
+(16, 6, 'Jugador 2', 2, 2, 0, '2025-08-04 04:34:20'),
+(17, 6, 'Jugador 3', 2, 3, 0, '2025-08-04 04:34:20'),
+(18, 6, 'Jugador 4', 2, 4, 0, '2025-08-04 04:34:20'),
+(19, 6, 'Jugador 5', 2, 5, 0, '2025-08-04 04:34:20'),
+(20, 6, 'Jugador 6', 2, 6, 0, '2025-08-04 04:34:20'),
+(21, 6, 'Jugador 7', 2, 7, 0, '2025-08-04 04:34:20'),
+(22, 7, 'Jugador 1', 2, 1, 0, '2025-08-04 04:34:48'),
+(23, 7, 'Jugador 2', 2, 2, 0, '2025-08-04 04:34:48'),
+(24, 7, 'Jugador 3', 2, 3, 0, '2025-08-04 04:34:48'),
+(25, 7, 'Jugador 4', 2, 4, 0, '2025-08-04 04:34:48'),
+(26, 7, 'Jugador 5', 2, 5, 0, '2025-08-04 04:34:48'),
+(27, 7, 'Jugador 6', 2, 6, 0, '2025-08-04 04:34:48'),
+(28, 7, 'Jugador 7', 2, 7, 0, '2025-08-04 04:34:48'),
+(29, 8, 'Jugador 1', 2, 1, 0, '2025-08-04 04:36:24'),
+(30, 8, 'Jugador 2', 2, 2, 0, '2025-08-04 04:36:24'),
+(31, 8, 'Jugador 3', 2, 3, 0, '2025-08-04 04:36:24'),
+(32, 8, 'Jugador 4', 2, 4, 0, '2025-08-04 04:36:24'),
+(33, 8, 'Jugador 5', 2, 5, 0, '2025-08-04 04:36:24'),
+(34, 8, 'Jugador 6', 2, 6, 0, '2025-08-04 04:36:24'),
+(35, 8, 'Jugador 7', 2, 7, 0, '2025-08-04 04:36:24'),
+(36, 9, 'Jugador 1', NULL, 1, 0, '2025-08-04 04:38:03'),
+(37, 9, 'Jugador 2', NULL, 2, 0, '2025-08-04 04:38:03'),
+(38, 9, 'Jugador 3', NULL, 3, 0, '2025-08-04 04:38:03'),
+(39, 9, 'Jugador 4', NULL, 4, 0, '2025-08-04 04:38:03'),
+(40, 9, 'Jugador 5', NULL, 5, 0, '2025-08-04 04:38:03'),
+(41, 9, 'Jugador 6', NULL, 6, 0, '2025-08-04 04:38:03'),
+(42, 9, 'Jugador 7', NULL, 7, 0, '2025-08-04 04:38:03'),
+(43, 10, 'Jugador 1', NULL, 1, 0, '2025-08-04 04:39:20'),
+(44, 10, 'Jugador 2', NULL, 2, 0, '2025-08-04 04:39:20'),
+(45, 10, 'Jugador 3', NULL, 3, 0, '2025-08-04 04:39:20'),
+(46, 10, 'Jugador 4', NULL, 4, 0, '2025-08-04 04:39:20'),
+(47, 10, 'Jugador 5', NULL, 5, 0, '2025-08-04 04:39:20'),
+(48, 10, 'Jugador 6', NULL, 6, 0, '2025-08-04 04:39:20'),
+(49, 10, 'Jugador 7', NULL, 7, 0, '2025-08-04 04:39:21'),
+(50, 21, 'Jugador 1', 2, 1, 0, '2025-08-04 05:03:39'),
+(51, 21, 'Jugador 2', 2, 2, 0, '2025-08-04 05:03:39'),
+(52, 21, 'Jugador 3', 2, 3, 0, '2025-08-04 05:03:39'),
+(53, 21, 'Jugador 4', 2, 4, 0, '2025-08-04 05:03:39'),
+(54, 21, 'Jugador 5', 2, 5, 0, '2025-08-04 05:03:39'),
+(55, 21, 'Jugador 6', 2, 6, 0, '2025-08-04 05:03:39'),
+(56, 21, 'Jugador 7', 2, 7, 0, '2025-08-04 05:03:39'),
+(57, 22, 'Jugador 1', 2, 1, 0, '2025-08-04 05:03:49'),
+(58, 22, 'Jugador 2', 2, 2, 0, '2025-08-04 05:03:49'),
+(59, 22, 'Jugador 3', 2, 3, 0, '2025-08-04 05:03:49'),
+(60, 22, 'Jugador 4', 2, 4, 0, '2025-08-04 05:03:50'),
+(61, 22, 'Jugador 5', 2, 5, 0, '2025-08-04 05:03:50'),
+(62, 22, 'Jugador 6', 2, 6, 0, '2025-08-04 05:03:50'),
+(63, 22, 'Jugador 7', 2, 7, 0, '2025-08-04 05:03:50'),
+(64, 23, 'Jugador 1', NULL, 1, 0, '2025-08-04 05:12:32'),
+(65, 23, 'Jugador 2', NULL, 2, 0, '2025-08-04 05:12:33'),
+(66, 23, 'Jugador 3', NULL, 3, 0, '2025-08-04 05:12:33'),
+(67, 23, 'Jugador 4', NULL, 4, 0, '2025-08-04 05:12:33'),
+(68, 23, 'Jugador 5', NULL, 5, 0, '2025-08-04 05:12:33'),
+(69, 23, 'Jugador 6', NULL, 6, 0, '2025-08-04 05:12:33'),
+(70, 23, 'Jugador 7', NULL, 7, 0, '2025-08-04 05:12:33');
 
 -- --------------------------------------------------------
 
@@ -243,6 +345,7 @@ ALTER TABLE `cards`
 --
 ALTER TABLE `game_rooms`
   ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `room_code` (`room_code`),
   ADD KEY `selected_map_id` (`selected_map_id`);
 
 --
@@ -306,7 +409,7 @@ ALTER TABLE `cards`
 -- AUTO_INCREMENT de la tabla `game_rooms`
 --
 ALTER TABLE `game_rooms`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=24;
 
 --
 -- AUTO_INCREMENT de la tabla `game_rounds`
@@ -330,7 +433,7 @@ ALTER TABLE `player_cards`
 -- AUTO_INCREMENT de la tabla `room_players`
 --
 ALTER TABLE `room_players`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=71;
 
 --
 -- AUTO_INCREMENT de la tabla `round_cards`
