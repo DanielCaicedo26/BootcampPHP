@@ -206,7 +206,7 @@ async function startNewRound() {
             gameState.roundInProgress = true;
             gameState.currentTurn = data.current_turn;
             
-            // Actualizar UI
+            // Actualizar UI inmediatamente
             updateRoundDisplay(data);
             
             // Mostrar animación de selección de atributo
@@ -232,28 +232,35 @@ async function startNewRound() {
 function updateRoundDisplay(data) {
     const elements = {
         currentRound: document.getElementById('currentRound'),
-        selectedAttribute: document.getElementById('selectedAttribute'),
-        turnIndicator: document.getElementById('turnIndicator'),
-        turnIndicatorText: document.getElementById('turnIndicatorText')
+        currentAttribute: document.getElementById('currentAttribute'),
+        attributeIconBig: document.getElementById('attributeIconBig'),
+        attributeNameBig: document.getElementById('attributeNameBig'),
+        roundCounter: document.getElementById('roundCounter')
     };
     
     if (elements.currentRound) {
-        elements.currentRound.textContent = `Ronda: ${data.round_number}`;
+        elements.currentRound.textContent = `Ronda: ${data.round_number}/8`;
     }
     
-    if (elements.selectedAttribute) {
-        elements.selectedAttribute.textContent = `${getAttributeIcon(data.selected_attribute)} ${data.attribute_name}`;
+    if (elements.currentAttribute) {
+        elements.currentAttribute.textContent = `${getAttributeIcon(data.selected_attribute)} ${data.attribute_name}`;
     }
     
-    // Mostrar indicador de turno
-    if (elements.turnIndicator && elements.turnIndicatorText) {
-        elements.turnIndicatorText.textContent = `Ronda ${data.round_number} - Atributo: ${data.attribute_name}`;
-        elements.turnIndicator.style.display = 'block';
+    if (elements.attributeIconBig) {
+        elements.attributeIconBig.textContent = getAttributeIcon(data.selected_attribute);
+    }
+    
+    if (elements.attributeNameBig) {
+        elements.attributeNameBig.textContent = data.attribute_name;
+    }
+    
+    if (elements.roundCounter) {
+        elements.roundCounter.textContent = `Ronda ${data.round_number} de 8`;
     }
 }
 
 // ==========================================
-// ANIMACIÓN DE RULETA DE ATRIBUTOS
+// ANIMACIÓN DE RULETA DE ATRIBUTOS - CORREGIDA
 // ==========================================
 
 function showAttributeRouletteAnimation(selectedAttribute, attributeName) {
@@ -271,155 +278,164 @@ function showAttributeRouletteAnimation(selectedAttribute, attributeName) {
         document.body.appendChild(modal);
         
         // Iniciar animación después de un breve delay
-        setTimeout(() => startRouletteAnimation(modal, attributes, selectedAttribute), 100);
+        setTimeout(() => startRouletteAnimation(modal, attributes, selectedAttribute, resolve), 300);
     });
 }
 
 function createRouletteModal(attributes, selectedAttribute, attributeName, resolve) {
     const modal = document.createElement('div');
-    modal.className = 'modal roulette-modal';
-    modal.style.cssText = `
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0,0,0,0.9);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 2000;
-        animation: fadeIn 0.3s ease;
-    `;
-    
+    modal.className = 'pokemon-modal roulette-modal active';
     modal.innerHTML = `
-        <div class="roulette-content" style="
-            background: white;
-            border-radius: 20px;
-            padding: 40px;
-            text-align: center;
-            max-width: 700px;
-            width: 90%;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-        ">
-            <h2 style="color: #333; margin-bottom: 30px; font-size: 2.2em;">
-                🎲 Seleccionando Atributo
-            </h2>
-            <div id="roulette-wheel" style="
-                display: grid;
-                grid-template-columns: repeat(3, 1fr);
-                gap: 20px;
-                margin: 40px 0;
-            ">
-                ${attributes.map((attr, index) => `
-                    <div class="attribute-option" data-attribute="${attr.key}" style="
-                        padding: 25px;
-                        border: 3px solid #ddd;
-                        border-radius: 15px;
-                        background: white;
-                        transition: all 0.3s ease;
-                        cursor: pointer;
-                        transform: scale(1);
-                    ">
-                        <div style="font-size: 3em; margin-bottom: 10px;">${attr.icon}</div>
-                        <div style="font-weight: bold; color: #333;">${attr.name}</div>
-                    </div>
-                `).join('')}
+        <div class="modal-backdrop"></div>
+        <div class="modal-container" style="max-width: 800px;">
+            <div class="modal-header">
+                <h2 class="modal-title">🎲 Seleccionando Atributo</h2>
             </div>
-            <div id="roulette-result" style="display: none; margin-top: 30px;">
-                <h3 style="color: #4CAF50; margin-bottom: 20px;">¡Atributo Seleccionado!</h3>
-                <div id="selected-attribute-display" style="font-size: 2.5em; margin: 20px 0;"></div>
-                <button id="continue-game-btn" style="
-                    background: linear-gradient(135deg, #4CAF50, #45a049);
-                    color: white;
-                    border: none;
-                    padding: 15px 30px;
-                    border-radius: 10px;
-                    font-size: 1.2em;
-                    font-weight: bold;
-                    cursor: pointer;
-                    transition: all 0.3s ease;
-                ">¡Continuar Juego!</button>
+            <div class="modal-body">
+                <div id="roulette-wheel" style="
+                    display: grid;
+                    grid-template-columns: repeat(3, 1fr);
+                    gap: 20px;
+                    margin: 30px 0;
+                ">
+                    ${attributes.map(attr => `
+                        <div class="attribute-option" data-attribute="${attr.key}" style="
+                            padding: 25px;
+                            border: 3px solid var(--pokemon-blue);
+                            border-radius: 15px;
+                            background: white;
+                            text-align: center;
+                            transition: all 0.3s ease;
+                            cursor: pointer;
+                        ">
+                            <div style="font-size: 3em; margin-bottom: 10px;">${attr.icon}</div>
+                            <div style="font-weight: bold; color: var(--pokemon-blue);">${attr.name}</div>
+                        </div>
+                    `).join('')}
+                </div>
+                <div id="roulette-result" style="display: none; text-align: center; margin-top: 30px;">
+                    <h3 style="color: var(--pokemon-green); margin-bottom: 20px;">¡Atributo Seleccionado!</h3>
+                    <div id="selected-attribute-display" style="font-size: 2.5em; margin: 20px 0;"></div>
+                </div>
+            </div>
+            <div class="modal-actions" id="modal-actions" style="display: none;">
+                <button class="pokemon-btn primary" id="continue-game-btn">
+                    <span>¡Continuar Juego!</span>
+                    <span>🎮</span>
+                </button>
             </div>
         </div>
     `;
     
-    // Event listener para el botón continuar
-    modal.querySelector('#continue-game-btn').onclick = () => {
-        modal.remove();
-        resolve();
-    };
-    
     return modal;
 }
 
-function startRouletteAnimation(modal, attributes, selectedAttribute) {
+function startRouletteAnimation(modal, attributes, selectedAttribute, resolve) {
     const options = modal.querySelectorAll('.attribute-option');
+    const wheel = modal.querySelector('#roulette-wheel');
+    const result = modal.querySelector('#roulette-result');
+    const actions = modal.querySelector('#modal-actions');
+    const continueBtn = modal.querySelector('#continue-game-btn');
+    
     let currentIndex = 0;
     let iterations = 0;
-    const maxIterations = 15;
-    const baseSpeed = 200;
+    const maxIterations = 20; // Más iteraciones para mejor efecto
+    let animationSpeed = 150; // Velocidad inicial
     
-    const rouletteInterval = setInterval(() => {
-        // Resetear estilos
-        options.forEach(opt => {
-            opt.style.border = '3px solid #ddd';
-            opt.style.transform = 'scale(1)';
-            opt.style.background = 'white';
-            opt.style.boxShadow = 'none';
+    console.log('Iniciando animación de ruleta, atributo objetivo:', selectedAttribute);
+    
+    function animateStep() {
+        // Resetear todos los estilos
+        options.forEach(option => {
+            option.style.border = '3px solid var(--pokemon-blue)';
+            option.style.background = 'white';
+            option.style.transform = 'scale(1)';
+            option.style.boxShadow = 'none';
         });
         
         // Destacar opción actual
         const currentOption = options[currentIndex];
-        currentOption.style.border = '3px solid #ff6b6b';
-        currentOption.style.transform = 'scale(1.1)';
-        currentOption.style.background = 'linear-gradient(135deg, #ffe6e6, #fff0f0)';
-        currentOption.style.boxShadow = '0 8px 25px rgba(255, 107, 107, 0.4)';
+        if (currentOption) {
+            currentOption.style.border = '3px solid var(--pokemon-yellow)';
+            currentOption.style.background = 'linear-gradient(135deg, rgba(255, 204, 0, 0.1), rgba(255, 204, 0, 0.2))';
+            currentOption.style.transform = 'scale(1.1)';
+            currentOption.style.boxShadow = '0 8px 25px rgba(255, 204, 0, 0.4)';
+        }
         
+        // Avanzar al siguiente índice
         currentIndex = (currentIndex + 1) % attributes.length;
         iterations++;
         
-        // Calcular velocidad (más lento hacia el final)
-        const speed = baseSpeed + (iterations * 30);
+        // Incrementar velocidad gradualmente (hacer más lento)
+        animationSpeed += 20;
         
         if (iterations >= maxIterations) {
-            clearInterval(rouletteInterval);
-            showRouletteResult(modal, selectedAttribute, attributes);
+            // Terminar animación y mostrar resultado
+            showRouletteResult(modal, selectedAttribute, attributes, resolve);
         } else {
-            // Cambiar velocidad del interval
-            clearInterval(rouletteInterval);
-            setTimeout(() => startRouletteAnimation(modal, attributes, selectedAttribute), speed);
-            return;
+            // Continuar animación
+            setTimeout(animateStep, animationSpeed);
         }
-    }, baseSpeed);
+    }
+    
+    // Iniciar animación
+    animateStep();
 }
 
-function showRouletteResult(modal, selectedAttribute, attributes) {
+function showRouletteResult(modal, selectedAttribute, attributes, resolve) {
     const selectedAttr = attributes.find(attr => attr.key === selectedAttribute);
     const wheel = modal.querySelector('#roulette-wheel');
     const result = modal.querySelector('#roulette-result');
+    const actions = modal.querySelector('#modal-actions');
     const display = modal.querySelector('#selected-attribute-display');
+    const continueBtn = modal.querySelector('#continue-game-btn');
     
-    // Destacar atributo seleccionado
+    console.log('Mostrando resultado:', selectedAttr);
+    
+    if (!selectedAttr) {
+        console.error('Atributo seleccionado no encontrado:', selectedAttribute);
+        resolve();
+        modal.remove();
+        return;
+    }
+    
+    // Destacar la opción ganadora
     const selectedOption = modal.querySelector(`[data-attribute="${selectedAttribute}"]`);
     if (selectedOption) {
-        selectedOption.style.border = '4px solid #4CAF50';
-        selectedOption.style.background = 'linear-gradient(135deg, #e8f5e8, #f0f8f0)';
-        selectedOption.style.transform = 'scale(1.15)';
+        selectedOption.style.border = '4px solid var(--pokemon-green)';
+        selectedOption.style.background = 'linear-gradient(135deg, rgba(76, 175, 80, 0.2), rgba(76, 175, 80, 0.3))';
+        selectedOption.style.transform = 'scale(1.2)';
         selectedOption.style.boxShadow = '0 12px 35px rgba(76, 175, 80, 0.6)';
     }
     
-    // Mostrar resultado
+    // Mostrar el resultado
     display.innerHTML = `
         <div style="font-size: 4em; margin-bottom: 15px;">${selectedAttr.icon}</div>
-        <div style="font-size: 1.8em; color: #4CAF50; font-weight: bold;">${selectedAttr.name}</div>
+        <div style="font-size: 1.8em; color: var(--pokemon-green); font-weight: bold;">${selectedAttr.name}</div>
     `;
     
+    // Configurar el botón para continuar
+    continueBtn.onclick = () => {
+        modal.remove();
+        resolve();
+    };
+    
+    // Mostrar resultado con una transición suave
     setTimeout(() => {
         wheel.style.opacity = '0.3';
+        wheel.style.filter = 'blur(2px)';
         result.style.display = 'block';
-        result.style.animation = 'slideUp 0.5s ease';
-    }, 1000);
+        actions.style.display = 'flex';
+        
+        // Animación de entrada
+        result.style.opacity = '0';
+        result.style.transform = 'translateY(20px)';
+        setTimeout(() => {
+            result.style.transition = 'all 0.5s ease';
+            result.style.opacity = '1';
+            result.style.transform = 'translateY(0)';
+        }, 100);
+    }, 1500);
 }
 
 // ==========================================
@@ -430,6 +446,7 @@ async function prepareTurn() {
     try {
         await fetchCurrentPlayerCards();
         updateTurnDisplay();
+        updatePokemonUI();
         
         // Verificar si es el turno del jugador actual del cliente
         const isMyTurn = gameState.currentPlayerId === gameState.playerId;
@@ -450,6 +467,100 @@ async function prepareTurn() {
     }
 }
 
+function updatePokemonUI() {
+    // Actualizar elementos específicos del diseño Pokémon
+    const elements = {
+        currentAttributeDisplay: document.getElementById('currentAttributeDisplay'),
+        totalPlayersDisplay: document.getElementById('totalPlayersDisplay'),
+        gameProgress: document.getElementById('gameProgress'),
+        gameTimeDisplay: document.getElementById('gameTimeDisplay')
+    };
+    
+    if (elements.currentAttributeDisplay) {
+        elements.currentAttributeDisplay.textContent = getAttributeName(gameState.currentAttribute) || '-';
+    }
+    
+    if (elements.totalPlayersDisplay) {
+        elements.totalPlayersDisplay.textContent = gameState.totalPlayers;
+    }
+    
+    if (elements.gameProgress) {
+        const progressPercent = (gameState.currentRound / GAME_CONFIG.MAX_ROUNDS) * 100;
+        elements.gameProgress.style.width = `${progressPercent}%`;
+    }
+    
+    // Actualizar posiciones de jugadores en el tablero circular
+    updatePlayerPositions();
+}
+
+function updatePlayerPositions() {
+    // Actualizar las posiciones de batalla en el círculo
+    gameState.players.forEach((player, index) => {
+        const position = document.querySelector(`.battle-position.pos-${index + 1}`);
+        if (position) {
+            const slot = position.querySelector('.position-slot');
+            const content = position.querySelector('.slot-content .player-slot-name');
+            
+            if (content) {
+                content.textContent = player.player_name;
+            }
+            
+            // Destacar si es el turno del jugador
+            if (player.id === gameState.currentPlayerId) {
+                slot.classList.add('has-card');
+                slot.style.borderColor = 'var(--pokemon-yellow)';
+                slot.style.background = 'rgba(255, 204, 0, 0.2)';
+            } else {
+                slot.classList.remove('has-card');
+                slot.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+                slot.style.background = 'rgba(255, 255, 255, 0.1)';
+            }
+        }
+    });
+    
+    // Actualizar información en las zonas de jugadores
+    updatePlayerZones();
+}
+
+function updatePlayerZones() {
+    gameState.players.forEach((player, index) => {
+        const playerZone = document.getElementById(`playerZone${index + 1}`);
+        if (playerZone) {
+            const nameElement = playerZone.querySelector('.player-name');
+            const scoreElement = playerZone.querySelector(`#player${index + 1}Score`);
+            const cardsElement = playerZone.querySelector(`#player${index + 1}Cards`);
+            const avatarRing = playerZone.querySelector('.avatar-ring');
+            const turnIndicator = playerZone.querySelector('.turn-indicator');
+            
+            if (nameElement) {
+                nameElement.textContent = player.player_name;
+            }
+            
+            if (scoreElement) {
+                scoreElement.textContent = player.score;
+            }
+            
+            if (cardsElement) {
+                const remainingCards = GAME_CONFIG.CARDS_PER_PLAYER - (gameState.currentRound - 1);
+                cardsElement.textContent = Math.max(0, remainingCards);
+            }
+            
+            // Destacar jugador activo
+            if (player.id === gameState.currentPlayerId) {
+                avatarRing?.classList.add('active');
+                if (turnIndicator) {
+                    turnIndicator.style.display = 'flex';
+                }
+            } else {
+                avatarRing?.classList.remove('active');
+                if (turnIndicator) {
+                    turnIndicator.style.display = 'none';
+                }
+            }
+        }
+    });
+}
+
 async function fetchCurrentPlayerCards() {
     try {
         // Obtener cartas del jugador actual de la sesión (no del turno)
@@ -467,49 +578,40 @@ async function fetchCurrentPlayerCards() {
 
 function updateTurnDisplay() {
     const elements = {
-        currentTurn: document.getElementById('currentTurn'),
-        currentPlayerDisplay: document.getElementById('currentPlayerDisplay'),
-        turnInstructions: document.getElementById('turnInstructions'),
-        roundStatus: document.getElementById('roundStatus')
+        turnText: document.getElementById('turnText'),
+        handTitle: document.getElementById('handTitle'),
+        turnArrow: document.getElementById('turnArrow'),
+        cardsRemaining: document.getElementById('cardsRemaining'),
+        totalCards: document.getElementById('totalCards')
     };
     
-    if (elements.currentTurn) {
-        elements.currentTurn.textContent = `Turno de: ${gameState.currentPlayerName}`;
+    if (elements.turnText) {
+        elements.turnText.textContent = `Turno de ${gameState.currentPlayerName}`;
     }
     
-    if (elements.currentPlayerDisplay) {
-        elements.currentPlayerDisplay.textContent = gameState.currentPlayerName;
-    }
-    
-    if (elements.turnInstructions) {
+    if (elements.handTitle) {
         const isMyTurn = gameState.currentPlayerId === gameState.playerId;
-        elements.turnInstructions.textContent = isMyTurn 
-            ? '¡Es tu turno! Selecciona una carta para jugar'
-            : `Esperando a que ${gameState.currentPlayerName} juegue su carta...`;
+        elements.handTitle.textContent = isMyTurn 
+            ? '🎯 ¡Tu Turno! - Selecciona una Carta'
+            : `🎮 Turno de ${gameState.currentPlayerName}`;
     }
     
-    if (elements.roundStatus) {
-        elements.roundStatus.innerHTML = `
-            <p><strong>Ronda:</strong> ${gameState.currentRound} de ${GAME_CONFIG.MAX_ROUNDS}</p>
-            <p><strong>Turno actual:</strong> ${gameState.currentPlayerName}</p>
-            <p><strong>Atributo:</strong> ${getAttributeName(gameState.currentAttribute)}</p>
-            <p><strong>Jugadores restantes esta ronda:</strong> ${getPlayersLeftInRound()}</p>
-        `;
+    if (elements.cardsRemaining) {
+        elements.cardsRemaining.textContent = gameState.playerCards?.length || 0;
     }
-}
-
-function getPlayersLeftInRound() {
-    const playersPlayed = gameState.totalPlayers - gameState.currentTurn + 1;
-    return `${Math.max(0, gameState.totalPlayers - playersPlayed + 1)} de ${gameState.totalPlayers}`;
+    
+    if (elements.totalCards) {
+        elements.totalCards.textContent = GAME_CONFIG.CARDS_PER_PLAYER;
+    }
 }
 
 function highlightPlayerHand(highlight) {
-    const handContainer = document.getElementById('playerHandContainer');
-    if (handContainer) {
+    const handSection = document.querySelector('.player-hand-section');
+    if (handSection) {
         if (highlight) {
-            handContainer.classList.add('current-turn');
+            handSection.classList.add('current-turn');
         } else {
-            handContainer.classList.remove('current-turn');
+            handSection.classList.remove('current-turn');
         }
     }
 }
@@ -528,55 +630,61 @@ function renderPlayerCards() {
     
     if (!gameState.playerCards || gameState.playerCards.length === 0) {
         cardsContainer.innerHTML = `
-            <div style="text-align: center; color: #666; padding: 40px;">
-                <div style="font-size: 3em; margin-bottom: 15px;">🃏</div>
-                <p>No hay cartas disponibles</p>
+            <div class="no-cards-message">
+                <div class="no-cards-icon">🃏</div>
+                <div class="no-cards-text">No hay cartas disponibles</div>
             </div>
         `;
         return;
     }
     
     cardsContainer.innerHTML = gameState.playerCards.map(card => createCardHTML(card)).join('');
-    
-    // Actualizar contador de cartas
-    updateCardsCounter();
 }
 
 function createCardHTML(card) {
     const attributeValue = gameState.currentAttribute ? card[gameState.currentAttribute] : 0;
     const attributeIcon = getAttributeIcon(gameState.currentAttribute);
+    const isCurrentAttribute = (attr) => gameState.currentAttribute === attr;
     
     return `
-        <div class="card" data-card-id="${card.id}" data-attribute-value="${attributeValue}">
+        <div class="hand-card" data-card-id="${card.id}" data-attribute-value="${attributeValue}">
             <div class="card-image">
                 <img src="${card.image_url || '/placeholder-card.jpg'}" alt="${card.name}" 
                      onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                 <div class="card-placeholder" style="display: none;">🃏</div>
             </div>
-            <div class="card-content">
-                <h4 class="card-name">${card.name}</h4>
+            <div class="card-info">
+                <div class="card-name">${card.name}</div>
                 ${gameState.currentAttribute ? `
-                    <div class="current-attribute-highlight">
-                        <strong>${attributeIcon} ${getAttributeName(gameState.currentAttribute)}: ${attributeValue}</strong>
+                    <div style="
+                        background: linear-gradient(135deg, var(--pokemon-green), var(--pokemon-blue));
+                        color: white;
+                        padding: 8px;
+                        border-radius: 8px;
+                        margin: 8px 0;
+                        font-weight: bold;
+                        text-align: center;
+                    ">
+                        ${attributeIcon} ${getAttributeName(gameState.currentAttribute)}: ${attributeValue}
                     </div>
                 ` : ''}
-                <div class="card-stats">
-                    <div class="stat ${gameState.currentAttribute === 'altura_mts' ? 'highlight' : ''}">
+                <div class="card-attributes">
+                    <div class="card-attr ${isCurrentAttribute('altura_mts') ? 'highlight' : ''}">
                         📏 ${card.altura_mts}m
                     </div>
-                    <div class="stat ${gameState.currentAttribute === 'fuerza' ? 'highlight' : ''}">
+                    <div class="card-attr ${isCurrentAttribute('fuerza') ? 'highlight' : ''}">
                         ⚡ ${card.fuerza}
                     </div>
-                    <div class="stat ${gameState.currentAttribute === 'velocidad_percent' ? 'highlight' : ''}">
+                    <div class="card-attr ${isCurrentAttribute('velocidad_percent') ? 'highlight' : ''}">
                         🏃 ${card.velocidad_percent}%
                     </div>
-                    <div class="stat ${gameState.currentAttribute === 'tecnica' ? 'highlight' : ''}">
+                    <div class="card-attr ${isCurrentAttribute('tecnica') ? 'highlight' : ''}">
                         🧠 ${card.tecnica}
                     </div>
-                    <div class="stat ${gameState.currentAttribute === 'ki' ? 'highlight' : ''}">
+                    <div class="card-attr ${isCurrentAttribute('ki') ? 'highlight' : ''}">
                         💫 ${card.ki}
                     </div>
-                    <div class="stat ${gameState.currentAttribute === 'peleas_ganadas' ? 'highlight' : ''}">
+                    <div class="card-attr ${isCurrentAttribute('peleas_ganadas') ? 'highlight' : ''}">
                         🏆 ${card.peleas_ganadas}
                     </div>
                 </div>
@@ -585,15 +693,8 @@ function createCardHTML(card) {
     `;
 }
 
-function updateCardsCounter() {
-    const cardsLeftElement = document.getElementById('cardsLeft');
-    if (cardsLeftElement) {
-        cardsLeftElement.textContent = `Cartas restantes: ${gameState.playerCards.length}`;
-    }
-}
-
 function enableCardSelection() {
-    const cards = document.querySelectorAll('.card');
+    const cards = document.querySelectorAll('.hand-card');
     cards.forEach(card => {
         card.classList.add('selectable');
         card.style.cursor = 'pointer';
@@ -606,9 +707,10 @@ function enableCardSelection() {
 }
 
 function disableCardSelection() {
-    const cards = document.querySelectorAll('.card');
+    const cards = document.querySelectorAll('.hand-card');
     cards.forEach(card => {
         card.classList.remove('selectable');
+        card.classList.add('disabled');
         card.style.cursor = 'not-allowed';
         card.onclick = null;
     });
@@ -653,7 +755,7 @@ async function playCard(cardId, attributeValue) {
             renderPlayerCards();
             
             // Mostrar carta en área de juego
-            addCardToPlayArea(cardId, data.attribute_value, gameState.playerName);
+            addCardToBattlePosition(cardId, data.attribute_value, gameState.playerName);
             
             showAlert(`¡Carta jugada! Valor: ${data.attribute_value}`, 'success');
             
@@ -681,46 +783,62 @@ async function playCard(cardId, attributeValue) {
     }
 }
 
-function addCardToPlayArea(cardId, attributeValue, playerName) {
-    const playArea = document.getElementById('cardsInPlay');
-    if (!playArea) return;
+function addCardToBattlePosition(cardId, attributeValue, playerName) {
+    // Encontrar la posición del jugador actual
+    const playerIndex = gameState.players.findIndex(p => p.player_name === playerName);
+    if (playerIndex === -1) return;
     
-    // Limpiar mensaje inicial si existe
-    const emptyMessage = playArea.querySelector('p');
-    if (emptyMessage) {
-        emptyMessage.remove();
-    }
+    const position = document.querySelector(`.battle-position.pos-${playerIndex + 1}`);
+    if (!position) return;
     
+    const slot = position.querySelector('.position-slot');
     const card = gameState.playerCards.find(c => c.id == cardId);
-    if (!card) return;
     
-    const cardElement = document.createElement('div');
-    cardElement.className = 'played-card';
-    cardElement.innerHTML = `
-        <div class="card-image">
-            <img src="${card.image_url || '/placeholder-card.jpg'}" alt="${card.name}" 
-                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-            <div class="card-placeholder" style="display: none;">🃏</div>
-        </div>
-        <div class="card-content">
-            <h4>${card.name}</h4>
-            <div class="player-label">${playerName}</div>
-            <div class="attribute-value">
-                ${getAttributeIcon(gameState.currentAttribute)} ${attributeValue}
+    if (slot && card) {
+        slot.innerHTML = `
+            <div style="
+                background: white;
+                border-radius: 10px;
+                padding: 8px;
+                text-align: center;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+                transform: scale(0.8);
+            ">
+                <div style="font-size: 0.8em; font-weight: bold; color: var(--pokemon-blue); margin-bottom: 5px;">
+                    ${card.name}
+                </div>
+                <div style="
+                    background: linear-gradient(135deg, var(--pokemon-green), var(--pokemon-blue));
+                    color: white;
+                    padding: 6px;
+                    border-radius: 6px;
+                    font-weight: bold;
+                    font-size: 1.2em;
+                ">
+                    ${getAttributeIcon(gameState.currentAttribute)} ${attributeValue}
+                </div>
+                <div style="font-size: 0.7em; color: #666; margin-top: 3px;">
+                    ${playerName}
+                </div>
             </div>
-        </div>
-    `;
-    
-    playArea.appendChild(cardElement);
-    
-    // Animación de entrada
-    cardElement.style.transform = 'scale(0) rotate(180deg)';
-    cardElement.style.opacity = '0';
-    setTimeout(() => {
-        cardElement.style.transition = 'all 0.5s ease';
-        cardElement.style.transform = 'scale(1) rotate(0deg)';
-        cardElement.style.opacity = '1';
-    }, 100);
+        `;
+        
+        slot.classList.add('has-card');
+        slot.style.borderColor = 'var(--pokemon-green)';
+        slot.style.background = 'rgba(76, 175, 80, 0.2)';
+        
+        // Animación de entrada
+        const cardElement = slot.querySelector('div');
+        if (cardElement) {
+            cardElement.style.transform = 'scale(0) rotate(180deg)';
+            cardElement.style.opacity = '0';
+            setTimeout(() => {
+                cardElement.style.transition = 'all 0.5s ease';
+                cardElement.style.transform = 'scale(0.8) rotate(0deg)';
+                cardElement.style.opacity = '1';
+            }, 100);
+        }
+    }
 }
 
 // ==========================================
@@ -739,53 +857,32 @@ function showRoundResult(roundResult) {
 
 function createRoundResultModal(roundResult) {
     const modal = document.createElement('div');
-    modal.className = 'modal round-result-modal';
-    modal.style.cssText = `
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0,0,0,0.8);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 2000;
-        animation: fadeIn 0.3s ease;
-    `;
-    
+    modal.className = 'pokemon-modal active';
     modal.innerHTML = `
-        <div class="modal-content" style="
-            background: white;
-            border-radius: 20px;
-            padding: 40px;
-            max-width: 800px;
-            width: 90%;
-            max-height: 90vh;
-            overflow-y: auto;
-            text-align: center;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-        ">
-            <h2 style="color: #333; margin-bottom: 30px;">
-                🏆 Resultado de la Ronda ${gameState.currentRound}
-            </h2>
-            <div class="round-results">
-                <div class="attribute-info" style="
+        <div class="modal-backdrop"></div>
+        <div class="modal-container" style="max-width: 900px;">
+            <div class="modal-header">
+                <h2 class="modal-title">🏆 Resultado de la Ronda ${gameState.currentRound}</h2>
+            </div>
+            <div class="modal-body">
+                <div style="
                     background: #f8f9fa;
                     padding: 20px;
                     border-radius: 15px;
                     margin-bottom: 30px;
+                    text-align: center;
                 ">
                     <h3 style="color: #666; margin-bottom: 10px;">
                         ${getAttributeIcon(gameState.currentAttribute)} Atributo: ${getAttributeName(gameState.currentAttribute)}
                     </h3>
                 </div>
-                <div class="winner-announcement" style="
-                    background: linear-gradient(135deg, #4CAF50, #45a049);
+                <div style="
+                    background: linear-gradient(135deg, var(--pokemon-green), #45a049);
                     color: white;
                     border-radius: 15px;
                     padding: 30px;
                     margin: 30px 0;
+                    text-align: center;
                     box-shadow: 0 8px 25px rgba(76, 175, 80, 0.3);
                 ">
                     <h3 style="margin: 0 0 15px 0; font-size: 2em;">
@@ -800,11 +897,11 @@ function createRoundResultModal(roundResult) {
                 </div>
                 <div class="cards-comparison" id="cardsComparison">
                     <div style="text-align: center; color: #666; padding: 20px;">
-                        <div class="spinner" style="
+                        <div style="
                             width: 30px;
                             height: 30px;
                             border: 3px solid #f3f3f3;
-                            border-top: 3px solid #667eea;
+                            border-top: 3px solid var(--pokemon-blue);
                             border-radius: 50%;
                             animation: spin 1s linear infinite;
                             margin: 0 auto 10px;
@@ -813,18 +910,12 @@ function createRoundResultModal(roundResult) {
                     </div>
                 </div>
             </div>
-            <button onclick="nextRound()" style="
-                background: linear-gradient(135deg, #4CAF50, #45a049);
-                color: white;
-                border: none;
-                padding: 15px 30px;
-                border-radius: 10px;
-                font-size: 1.2em;
-                font-weight: bold;
-                cursor: pointer;
-                transition: all 0.3s ease;
-                margin-top: 30px;
-            ">Siguiente Ronda</button>
+            <div class="modal-actions">
+                <button class="pokemon-btn primary" onclick="nextRound()">
+                    <span>Siguiente Ronda</span>
+                    <span>➡️</span>
+                </button>
+            </div>
         </div>
     `;
     
@@ -846,19 +937,19 @@ async function loadRoundComparison(modal) {
         
         if (data.cards_played && data.cards_played.length > 0) {
             comparisonDiv.innerHTML = `
-                <h4 style="color: #333; margin-bottom: 25px; font-size: 1.4em;">
+                <h4 style="color: #333; margin-bottom: 25px; font-size: 1.4em; text-align: center;">
                     📊 Comparación de Cartas
                 </h4>
-                <div class="played-cards-grid" style="
+                <div style="
                     display: grid;
                     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
                     gap: 20px;
                     margin: 25px 0;
                 ">
                     ${data.cards_played.map((card, index) => `
-                        <div class="comparison-card ${index === 0 ? 'winner' : ''}" style="
+                        <div style="
                             background: ${index === 0 ? 'linear-gradient(135deg, #e8f5e8, #f0f8f0)' : 'white'};
-                            border: 3px solid ${index === 0 ? '#4CAF50' : '#ddd'};
+                            border: 3px solid ${index === 0 ? 'var(--pokemon-green)' : '#ddd'};
                             border-radius: 15px;
                             padding: 20px;
                             text-align: center;
@@ -872,7 +963,7 @@ async function loadRoundComparison(modal) {
                                     position: absolute;
                                     top: -15px;
                                     right: -15px;
-                                    background: #4CAF50;
+                                    background: var(--pokemon-green);
                                     color: white;
                                     border-radius: 50%;
                                     width: 40px;
@@ -903,11 +994,11 @@ async function loadRoundComparison(modal) {
                             <div style="
                                 font-size: 1.8em;
                                 font-weight: bold;
-                                color: ${index === 0 ? '#2e7d32' : '#ff6b6b'};
+                                color: ${index === 0 ? '#2e7d32' : 'var(--pokemon-red)'};
                                 padding: 15px;
-                                background: ${index === 0 ? 'rgba(76, 175, 80, 0.1)' : 'rgba(255, 107, 107, 0.1)'};
+                                background: ${index === 0 ? 'rgba(76, 175, 80, 0.1)' : 'rgba(220, 20, 60, 0.1)'};
                                 border-radius: 10px;
-                                border: 2px solid ${index === 0 ? '#4CAF50' : '#ff6b6b'};
+                                border: 2px solid ${index === 0 ? 'var(--pokemon-green)' : 'var(--pokemon-red)'};
                             ">
                                 ${getAttributeIcon(gameState.currentAttribute)} ${card.attribute_value}
                             </div>
@@ -927,7 +1018,7 @@ async function loadRoundComparison(modal) {
         console.error('Error cargando comparación:', error);
         const comparisonDiv = modal.querySelector('#cardsComparison');
         comparisonDiv.innerHTML = `
-            <div style="text-align: center; color: #ff6b6b; padding: 40px;">
+            <div style="text-align: center; color: var(--pokemon-red); padding: 40px;">
                 <div style="font-size: 3em; margin-bottom: 15px;">⚠️</div>
                 <p>Error al cargar la comparación de cartas</p>
             </div>
@@ -938,11 +1029,18 @@ async function loadRoundComparison(modal) {
 function proceedToNextRound() {
     gameState.currentRound++;
     
-    // Limpiar área de juego
-    const playArea = document.getElementById('cardsInPlay');
-    if (playArea) {
-        playArea.innerHTML = '<p style="text-align: center; color: #666; padding: 40px;">Las cartas jugadas aparecerán aquí</p>';
-    }
+    // Limpiar posiciones de batalla
+    document.querySelectorAll('.position-slot').forEach(slot => {
+        slot.classList.remove('has-card');
+        slot.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+        slot.style.background = 'rgba(255, 255, 255, 0.1)';
+        slot.innerHTML = `
+            <div class="slot-glow"></div>
+            <div class="slot-content">
+                <span class="player-slot-name">${slot.closest('.battle-position').dataset.player ? 'Jugador ' + slot.closest('.battle-position').dataset.player : ''}</span>
+            </div>
+        `;
+    });
     
     // Verificar si el juego terminó
     if (gameState.currentRound > GAME_CONFIG.MAX_ROUNDS) {
@@ -986,159 +1084,129 @@ async function showFinalResults() {
 
 function createFinalResultsModal(data) {
     const modal = document.createElement('div');
-    modal.className = 'modal final-results-modal';
-    modal.style.cssText = `
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0,0,0,0.9);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 2000;
-        animation: fadeIn 0.5s ease;
-    `;
-    
+    modal.className = 'pokemon-modal active';
     modal.innerHTML = `
-        <div class="modal-content" style="
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border-radius: 25px;
-            padding: 50px;
-            max-width: 700px;
-            width: 90%;
-            max-height: 90vh;
-            overflow-y: auto;
-            text-align: center;
-            box-shadow: 0 25px 70px rgba(0,0,0,0.4);
-            position: relative;
-        ">
-            <div style="
-                position: absolute;
-                top: -20px;
-                left: 50%;
-                transform: translateX(-50%);
-                font-size: 4em;
-                background: linear-gradient(135deg, #FFD700, #FFA500);
-                width: 80px;
-                height: 80px;
-                border-radius: 50%;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                box-shadow: 0 10px 30px rgba(255, 215, 0, 0.4);
-            ">🏆</div>
-            
-            <h2 style="margin: 30px 0 40px 0; font-size: 2.5em; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">
-                ¡Fin del Juego!
-            </h2>
-            
-            <div class="champion-section" style="
-                background: rgba(255,255,255,0.1);
-                border-radius: 20px;
-                padding: 30px;
-                margin: 30px 0;
-                backdrop-filter: blur(10px);
-            ">
-                <h3 style="margin: 0 0 20px 0; font-size: 2em;">
-                    🥇 ¡Campeón: ${data.winner?.player_name || 'Desconocido'}!
-                </h3>
-                <p style="font-size: 1.3em; margin: 0;">
-                    Puntuación Final: <strong>${data.winner?.score || 0} puntos</strong>
-                </p>
+        <div class="modal-backdrop"></div>
+        <div class="modal-container" style="max-width: 800px;">
+            <div class="modal-header">
+                <h2 class="modal-title">🎉 ¡Fin del Juego!</h2>
             </div>
-            
-            <div class="final-standings" style="
-                background: rgba(255,255,255,0.1);
-                border-radius: 20px;
-                padding: 30px;
-                margin: 30px 0;
-                backdrop-filter: blur(10px);
-            ">
-                <h4 style="margin: 0 0 25px 0; font-size: 1.5em;">📊 Clasificación Final</h4>
-                <div class="standings-list">
-                    ${(data.final_standings || []).map((player, index) => `
-                        <div style="
-                            display: flex;
-                            justify-content: space-between;
-                            align-items: center;
-                            padding: 15px 20px;
-                            margin: 10px 0;
-                            background: ${index === 0 ? 'rgba(255, 215, 0, 0.2)' : 'rgba(255,255,255,0.1)'};
-                            border-radius: 15px;
-                            border: 2px solid ${index === 0 ? '#FFD700' : 'rgba(255,255,255,0.2)'};
-                            font-size: 1.1em;
-                            transition: all 0.3s ease;
-                        ">
-                            <span style="display: flex; align-items: center; gap: 15px;">
-                                <span style="
-                                    font-size: 1.5em;
-                                    min-width: 40px;
-                                    height: 40px;
-                                    background: ${index === 0 ? '#FFD700' : index === 1 ? '#C0C0C0' : index === 2 ? '#CD7F32' : '#666'};
-                                    color: ${index < 3 ? 'white' : '#fff'};
-                                    border-radius: 50%;
-                                    display: flex;
-                                    align-items: center;
-                                    justify-content: center;
-                                    font-weight: bold;
-                                ">${index + 1}</span>
-                                <span style="font-weight: ${index === 0 ? 'bold' : 'normal'};">
-                                    ${player.player_name}
-                                </span>
-                            </span>
-                            <span style="
-                                font-size: 1.2em;
-                                font-weight: bold;
-                                color: ${index === 0 ? '#FFD700' : '#fff'};
-                            ">${player.score} pts</span>
-                        </div>
-                    `).join('')}
-                </div>
-            </div>
-            
-            <div class="game-stats" style="
-                background: rgba(255,255,255,0.1);
-                border-radius: 20px;
-                padding: 25px;
-                margin: 30px 0;
-                backdrop-filter: blur(10px);
-            ">
-                <h4 style="margin: 0 0 20px 0; font-size: 1.3em;">📈 Estadísticas del Juego</h4>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;">
-                    <div style="text-align: center;">
-                        <div style="font-size: 2em; margin-bottom: 5px;">🎮</div>
-                        <div style="font-size: 1.5em; font-weight: bold;">${GAME_CONFIG.MAX_ROUNDS}</div>
-                        <div style="font-size: 0.9em; opacity: 0.8;">Rondas Jugadas</div>
-                    </div>
-                    <div style="text-align: center;">
-                        <div style="font-size: 2em; margin-bottom: 5px;">👥</div>
-                        <div style="font-size: 1.5em; font-weight: bold;">${gameState.totalPlayers}</div>
-                        <div style="font-size: 0.9em; opacity: 0.8;">Jugadores</div>
-                    </div>
-                    <div style="text-align: center;">
-                        <div style="font-size: 2em; margin-bottom: 5px;">🃏</div>
-                        <div style="font-size: 1.5em; font-weight: bold;">${gameState.totalPlayers * GAME_CONFIG.CARDS_PER_PLAYER}</div>
-                        <div style="font-size: 0.9em; opacity: 0.8;">Cartas Jugadas</div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="final-actions" style="margin-top: 40px;">
-                <button onclick="returnToLobby()" style="
-                    background: linear-gradient(135deg, #4CAF50, #45a049);
+            <div class="modal-body">
+                <div style="
+                    background: linear-gradient(135deg, var(--pokemon-blue), var(--pokemon-purple));
                     color: white;
-                    border: none;
-                    padding: 15px 40px;
-                    border-radius: 12px;
-                    font-size: 1.2em;
-                    font-weight: bold;
-                    cursor: pointer;
-                    transition: all 0.3s ease;
-                    box-shadow: 0 8px 25px rgba(76, 175, 80, 0.3);
-                ">🏠 Volver al Lobby</button>
+                    border-radius: 20px;
+                    padding: 30px;
+                    margin: 30px 0;
+                    text-align: center;
+                    position: relative;
+                ">
+                    <div style="
+                        position: absolute;
+                        top: -20px;
+                        left: 50%;
+                        transform: translateX(-50%);
+                        font-size: 4em;
+                        background: linear-gradient(135deg, var(--pokemon-yellow), var(--pokemon-orange));
+                        width: 80px;
+                        height: 80px;
+                        border-radius: 50%;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        box-shadow: 0 10px 30px rgba(255, 204, 0, 0.4);
+                    ">🏆</div>
+                    
+                    <h3 style="margin: 30px 0 20px 0; font-size: 2em;">
+                        🥇 ¡Campeón: ${data.winner?.player_name || 'Desconocido'}!
+                    </h3>
+                    <p style="font-size: 1.3em; margin: 0;">
+                        Puntuación Final: <strong>${data.winner?.score || 0} puntos</strong>
+                    </p>
+                </div>
+                
+                <div style="
+                    background: rgba(255,255,255,0.95);
+                    border-radius: 15px;
+                    padding: 25px;
+                    margin: 25px 0;
+                ">
+                    <h4 style="margin: 0 0 20px 0; font-size: 1.4em; text-align: center; color: var(--pokemon-blue);">
+                        📊 Clasificación Final
+                    </h4>
+                    <div>
+                        ${(data.final_standings || []).map((player, index) => `
+                            <div style="
+                                display: flex;
+                                justify-content: space-between;
+                                align-items: center;
+                                padding: 15px 20px;
+                                margin: 10px 0;
+                                background: ${index === 0 ? 'linear-gradient(135deg, rgba(255, 204, 0, 0.2), rgba(255, 204, 0, 0.1))' : 'rgba(255,255,255,0.8)'};
+                                border-radius: 15px;
+                                border: 2px solid ${index === 0 ? 'var(--pokemon-yellow)' : '#e0e0e0'};
+                                font-size: 1.1em;
+                                transition: all 0.3s ease;
+                            ">
+                                <span style="display: flex; align-items: center; gap: 15px;">
+                                    <span style="
+                                        font-size: 1.5em;
+                                        min-width: 40px;
+                                        height: 40px;
+                                        background: ${index === 0 ? 'var(--pokemon-yellow)' : index === 1 ? '#C0C0C0' : index === 2 ? '#CD7F32' : '#666'};
+                                        color: white;
+                                        border-radius: 50%;
+                                        display: flex;
+                                        align-items: center;
+                                        justify-content: center;
+                                        font-weight: bold;
+                                    ">${index + 1}</span>
+                                    <span style="font-weight: ${index === 0 ? 'bold' : 'normal'}; color: var(--pokemon-blue);">
+                                        ${player.player_name}
+                                    </span>
+                                </span>
+                                <span style="
+                                    font-size: 1.2em;
+                                    font-weight: bold;
+                                    color: ${index === 0 ? 'var(--pokemon-yellow)' : 'var(--pokemon-blue)'};
+                                ">${player.score} pts</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                
+                <div style="
+                    background: rgba(255,255,255,0.95);
+                    border-radius: 15px;
+                    padding: 25px;
+                    margin: 25px 0;
+                ">
+                    <h4 style="margin: 0 0 20px 0; font-size: 1.2em; text-align: center; color: var(--pokemon-blue);">
+                        📈 Estadísticas del Juego
+                    </h4>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 15px;">
+                        <div style="text-align: center;">
+                            <div style="font-size: 2em; margin-bottom: 5px;">🎮</div>
+                            <div style="font-size: 1.5em; font-weight: bold; color: var(--pokemon-blue);">${GAME_CONFIG.MAX_ROUNDS}</div>
+                            <div style="font-size: 0.9em; color: #666;">Rondas</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 2em; margin-bottom: 5px;">👥</div>
+                            <div style="font-size: 1.5em; font-weight: bold; color: var(--pokemon-blue);">${gameState.totalPlayers}</div>
+                            <div style="font-size: 0.9em; color: #666;">Jugadores</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 2em; margin-bottom: 5px;">🃏</div>
+                            <div style="font-size: 1.5em; font-weight: bold; color: var(--pokemon-blue);">${gameState.totalPlayers * GAME_CONFIG.CARDS_PER_PLAYER}</div>
+                            <div style="font-size: 0.9em; color: #666;">Cartas Jugadas</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="pokemon-btn primary" onclick="returnToLobby()">
+                    <span>🏠 Volver al Lobby</span>
+                </button>
             </div>
         </div>
     `;
@@ -1154,43 +1222,23 @@ function createFinalResultsModal(data) {
 
 function createBasicEndGameModal() {
     const modal = document.createElement('div');
-    modal.className = 'modal basic-end-modal';
-    modal.style.cssText = `
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0,0,0,0.8);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 2000;
-    `;
-    
+    modal.className = 'pokemon-modal active';
     modal.innerHTML = `
-        <div style="
-            background: white;
-            border-radius: 20px;
-            padding: 40px;
-            text-align: center;
-            max-width: 500px;
-            width: 90%;
-        ">
-            <h2 style="color: #333; margin-bottom: 30px;">🎉 ¡Juego Terminado!</h2>
-            <p style="color: #666; margin-bottom: 30px; font-size: 1.1em;">
-                El juego ha finalizado después de ${GAME_CONFIG.MAX_ROUNDS} rondas emocionantes.
-            </p>
-            <button onclick="returnToLobby()" style="
-                background: linear-gradient(135deg, #4CAF50, #45a049);
-                color: white;
-                border: none;
-                padding: 15px 30px;
-                border-radius: 10px;
-                font-size: 1.1em;
-                font-weight: bold;
-                cursor: pointer;
-            ">Volver al Lobby</button>
+        <div class="modal-backdrop"></div>
+        <div class="modal-container small">
+            <div class="modal-header">
+                <h3 class="modal-title">🎉 ¡Juego Terminado!</h3>
+            </div>
+            <div class="modal-body">
+                <p style="text-align: center; color: var(--pokemon-blue); margin-bottom: 30px; font-size: 1.1em;">
+                    El juego ha finalizado después de ${GAME_CONFIG.MAX_ROUNDS} rondas emocionantes.
+                </p>
+            </div>
+            <div class="modal-actions">
+                <button class="pokemon-btn primary" onclick="returnToLobby()">
+                    <span>Volver al Lobby</span>
+                </button>
+            </div>
         </div>
     `;
     
@@ -1204,12 +1252,12 @@ function createBasicEndGameModal() {
 function updateGameUI(data) {
     updateRoundInfo(data);
     updateScoreboard(data.players);
-    updateTurnIndicator();
+    updatePokemonUI();
     
     // Verificar si el juego terminó
     if (data.room.status === 'finished' || data.room.current_round > GAME_CONFIG.MAX_ROUNDS) {
         gameState.gameFinished = true;
-        if (!document.querySelector('.final-results-modal')) {
+        if (!document.querySelector('.pokemon-modal.active')) {
             setTimeout(showFinalResults, 1000);
         }
     }
@@ -1218,73 +1266,26 @@ function updateGameUI(data) {
 function updateRoundInfo(data) {
     const elements = {
         currentRound: document.getElementById('currentRound'),
-        cardsLeft: document.getElementById('cardsLeft')
+        roundCounter: document.getElementById('roundCounter'),
+        progressText: document.querySelector('.progress-text')
     };
     
     if (elements.currentRound) {
-        elements.currentRound.textContent = `Ronda: ${data.room.current_round} de ${GAME_CONFIG.MAX_ROUNDS}`;
+        elements.currentRound.textContent = `Ronda: ${data.room.current_round}/8`;
     }
     
-    if (elements.cardsLeft) {
-        const remainingCards = GAME_CONFIG.CARDS_PER_PLAYER - (data.room.current_round - 1);
-        elements.cardsLeft.textContent = `Cartas restantes: ${Math.max(0, remainingCards)}`;
+    if (elements.roundCounter) {
+        elements.roundCounter.textContent = `Ronda ${data.room.current_round} de 8`;
+    }
+    
+    if (elements.progressText) {
+        elements.progressText.textContent = `Ronda ${data.room.current_round}/8`;
     }
 }
 
 function updateScoreboard(players) {
-    const scoreboard = document.getElementById('playerScores');
-    if (!scoreboard || !players) return;
-    
-    // Ordenar jugadores por puntuación
-    const sortedPlayers = [...players].sort((a, b) => b.score - a.score);
-    
-    scoreboard.innerHTML = sortedPlayers.map((player, index) => `
-        <div class="player-score ${player.id === gameState.currentPlayerId ? 'current-turn' : ''}" style="
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 15px;
-            margin: 8px 0;
-            background: ${player.id === gameState.currentPlayerId ? 'rgba(255, 215, 61, 0.2)' : 'rgba(255,255,255,0.9)'};
-            border-radius: 10px;
-            border-left: 4px solid ${index === 0 ? '#FFD700' : player.id === gameState.currentPlayerId ? '#ff6b6b' : '#ddd'};
-            transition: all 0.3s ease;
-            box-shadow: ${player.id === gameState.currentPlayerId ? '0 4px 15px rgba(255, 215, 0, 0.3)' : '0 2px 8px rgba(0,0,0,0.1)'};
-        ">
-            <span class="player-info" style="display: flex; align-items: center; gap: 10px;">
-                <span style="
-                    font-size: 1.2em;
-                    min-width: 25px;
-                    text-align: center;
-                ">${index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}.`}</span>
-                <span class="player-name" style="
-                    font-weight: ${index === 0 ? 'bold' : '600'};
-                    color: ${index === 0 ? '#ff6b6b' : '#333'};
-                ">${player.player_name}${player.id === gameState.currentPlayerId ? ' 👈' : ''}</span>
-            </span>
-            <span class="score" style="
-                font-weight: bold;
-                color: ${index === 0 ? '#ff6b6b' : '#666'};
-                font-size: 1.1em;
-            ">${player.score} pts</span>
-        </div>
-    `).join('');
-}
-
-function updateTurnIndicator() {
-    const indicator = document.getElementById('turnIndicator');
-    const indicatorText = document.getElementById('turnIndicatorText');
-    
-    if (indicator && indicatorText && gameState.currentPlayerName) {
-        const isMyTurn = gameState.currentPlayerId === gameState.playerId;
-        
-        indicator.style.display = 'block';
-        indicatorText.textContent = isMyTurn 
-            ? `¡Es tu turno! - Ronda ${gameState.currentRound}`
-            : `Turno de: ${gameState.currentPlayerName} - Ronda ${gameState.currentRound}`;
-        
-        indicator.className = `current-turn-indicator ${isMyTurn ? 'my-turn' : 'other-turn'}`;
-    }
+    // Esta función se puede usar para actualizar un marcador si existe en tu HTML
+    console.log('Actualizando marcador:', players);
 }
 
 function showLoadingState(message = 'Cargando...') {
@@ -1299,12 +1300,12 @@ function showLoadingState(message = 'Cargando...') {
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.7);
+            background: rgba(0,0,0,0.8);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            z-index: 1500;
+            z-index: 2500;
             color: white;
             font-size: 1.2em;
         `;
@@ -1314,21 +1315,22 @@ function showLoadingState(message = 'Cargando...') {
     loadingOverlay.innerHTML = `
         <div style="
             background: rgba(255,255,255,0.1);
-            padding: 30px;
-            border-radius: 15px;
+            padding: 40px;
+            border-radius: 20px;
             text-align: center;
             backdrop-filter: blur(10px);
+            border: 2px solid rgba(255,255,255,0.2);
         ">
             <div style="
-                width: 50px;
-                height: 50px;
+                width: 60px;
+                height: 60px;
                 border: 4px solid rgba(255,255,255,0.3);
-                border-top: 4px solid #fff;
+                border-top: 4px solid var(--pokemon-yellow);
                 border-radius: 50%;
                 animation: spin 1s linear infinite;
-                margin: 0 auto 20px;
+                margin: 0 auto 25px;
             "></div>
-            <p style="margin: 0; font-weight: 600;">${message}</p>
+            <p style="margin: 0; font-weight: 600; font-size: 1.1em;">${message}</p>
         </div>
     `;
     
@@ -1344,18 +1346,13 @@ function hideLoadingState() {
 
 function showAlert(message, type = 'info') {
     // Remover alertas existentes
-    const existingAlerts = document.querySelectorAll('.game-alert');
+    const existingAlerts = document.querySelectorAll('.pokemon-alert');
     existingAlerts.forEach(alert => alert.remove());
     
-    const alert = document.createElement('div');
-    alert.className = `game-alert alert-${type}`;
+    const alertsContainer = document.getElementById('alertsContainer') || createAlertsContainer();
     
-    const colors = {
-        'success': '#4CAF50',
-        'error': '#f44336',
-        'info': '#2196F3',
-        'warning': '#ff9800'
-    };
+    const alert = document.createElement('div');
+    alert.className = `pokemon-alert ${type}`;
     
     const icons = {
         'success': '✅',
@@ -1364,30 +1361,14 @@ function showAlert(message, type = 'info') {
         'warning': '⚠️'
     };
     
-    alert.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        padding: 15px 20px;
-        border-radius: 10px;
-        color: white;
-        font-weight: 600;
-        z-index: 1001;
-        max-width: 350px;
-        box-shadow: 0 8px 25px rgba(0,0,0,0.3);
-        animation: slideInRight 0.3s ease;
-        background: ${colors[type] || colors.info};
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    `;
-    
     alert.innerHTML = `
-        <span style="font-size: 1.2em;">${icons[type] || icons.info}</span>
-        <span>${message}</span>
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <span style="font-size: 1.2em;">${icons[type] || icons.info}</span>
+            <span>${message}</span>
+        </div>
     `;
     
-    document.body.appendChild(alert);
+    alertsContainer.appendChild(alert);
     
     // Auto-remover después del tiempo configurado
     setTimeout(() => {
@@ -1396,6 +1377,14 @@ function showAlert(message, type = 'info') {
             setTimeout(() => alert.remove(), 300);
         }
     }, GAME_CONFIG.ALERT_DURATION);
+}
+
+function createAlertsContainer() {
+    const container = document.createElement('div');
+    container.id = 'alertsContainer';
+    container.className = 'pokemon-alerts';
+    document.body.appendChild(container);
+    return container;
 }
 
 function showError(message) {
@@ -1464,11 +1453,11 @@ function cleanupGame() {
     sessionStorage.removeItem('gameConfig');
     
     // Limpiar modales
-    const modals = document.querySelectorAll('.modal');
+    const modals = document.querySelectorAll('.pokemon-modal');
     modals.forEach(modal => modal.remove());
     
     // Limpiar alertas
-    const alerts = document.querySelectorAll('.game-alert');
+    const alerts = document.querySelectorAll('.pokemon-alert');
     alerts.forEach(alert => alert.remove());
     
     // Limpiar overlay de carga
@@ -1484,267 +1473,38 @@ function redirectToLobby() {
 }
 
 // ==========================================
-// ESTILOS CSS DINÁMICOS
+// FUNCIONES GLOBALES PARA HTML
 // ==========================================
 
-function addGameStyles() {
-    const style = document.createElement('style');
-    style.textContent = `
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        
-        @keyframes slideInRight {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-        
-        @keyframes slideOutRight {
-            from { transform: translateX(0); opacity: 1; }
-            to { transform: translateX(100%); opacity: 0; }
-        }
-        
-        @keyframes slideUp {
-            from { transform: translateY(30px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        @keyframes bounce {
-            0% { transform: scale(0); }
-            50% { transform: scale(1.2); }
-            100% { transform: scale(1); }
-        }
-        
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
-        }
-        
-        .card {
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-        
-        .card:hover {
-            transform: translateY(-5px) scale(1.02);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-        }
-        
-        .card.selectable {
-            animation: pulse 2s infinite;
-            border: 3px solid #ff6b6b;
-            box-shadow: 0 0 20px rgba(255, 107, 107, 0.5);
-            cursor: pointer;
-        }
-        
-        .card.selectable:hover {
-            transform: translateY(-10px) scale(1.08);
-            box-shadow: 0 15px 35px rgba(255, 107, 107, 0.7);
-        }
-        
-        .card-stats .stat {
-            transition: all 0.3s ease;
-        }
-        
-        .card-stats .stat.highlight {
-            background: linear-gradient(135deg, #ff6b6b, #ff8e8e);
-            color: white;
-            font-weight: bold;
-            transform: scale(1.05);
-            box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
-        }
-        
-        .current-attribute-highlight {
-            background: linear-gradient(135deg, #4CAF50, #45a049);
-            color: white;
-            padding: 10px;
-            border-radius: 8px;
-            margin: 10px 0;
-            font-size: 1.1em;
-            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
-        }
-        
-        .played-card {
-            transition: all 0.5s ease;
-            margin: 10px;
-            position: relative;
-            background: white;
-            border-radius: 15px;
-            overflow: hidden;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        }
-        
-        .played-card .player-label {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            padding: 6px 12px;
-            border-radius: 6px;
-            font-size: 0.9em;
-            font-weight: 600;
-            margin: 8px 0;
-            text-align: center;
-        }
-        
-        .played-card .attribute-value {
-            background: linear-gradient(135deg, #ff6b6b, #ff8e8e);
-            color: white;
-            padding: 12px;
-            border-radius: 10px;
-            font-weight: bold;
-            font-size: 1.3em;
-            margin-top: 10px;
-            text-align: center;
-            box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
-        }
-        
-        .player-score.current-turn {
-            background: rgba(255, 107, 107, 0.1) !important;
-            border-left-color: #ff6b6b !important;
-            border-left-width: 5px !important;
-            transform: scale(1.02);
-            font-weight: bold;
-        }
-        
-        .current-turn-indicator {
-            background: linear-gradient(135deg, #4CAF50, #45a049);
-            color: white;
-            padding: 15px 25px;
-            border-radius: 15px;
-            text-align: center;
-            margin-bottom: 25px;
-            box-shadow: 0 8px 25px rgba(76, 175, 80, 0.3);
-            animation: glow 2s ease-in-out infinite alternate;
-        }
-        
-        .current-turn-indicator.my-turn {
-            background: linear-gradient(135deg, #ff6b6b, #ff8e8e);
-            box-shadow: 0 8px 25px rgba(255, 107, 107, 0.4);
-        }
-        
-        @keyframes glow {
-            from { box-shadow: 0 8px 25px rgba(76, 175, 80, 0.3); }
-            to { box-shadow: 0 12px 35px rgba(76, 175, 80, 0.6); }
-        }
-        
-        .player-hand.current-turn {
-            border: 3px solid #ff6b6b;
-            box-shadow: 0 8px 32px rgba(255, 107, 107, 0.3);
-            background: rgba(255, 107, 107, 0.05);
-        }
-        
-        .player-hand.current-turn::before {
-            content: "¡Tu turno! Selecciona una carta";
-            position: absolute;
-            top: -15px;
-            left: 20px;
-            background: linear-gradient(135deg, #ff6b6b, #ff8e8e);
-            color: white;
-            padding: 8px 20px;
-            border-radius: 20px;
-            font-weight: bold;
-            font-size: 0.9em;
-            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
-            animation: pulse 2s infinite;
-        }
-        
-        .comparison-card {
-            transition: all 0.3s ease;
-        }
-        
-        .comparison-card:hover {
-            transform: translateY(-5px) scale(1.02);
-        }
-        
-        .modal {
-            backdrop-filter: blur(5px);
-        }
-        
-        .roulette-content {
-            animation: slideUp 0.5s ease;
-        }
-        
-        .attribute-option:hover {
-            transform: scale(1.05);
-            border-color: #ff6b6b !important;
-            background: #ffe6e6 !important;
-        }
-        
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .current-turn-indicator {
-                padding: 12px 20px;
-                font-size: 0.9em;
-            }
-            
-            .game-alert {
-                right: 10px;
-                left: 10px;
-                max-width: none;
-            }
-            
-            .roulette-content {
-                padding: 30px 20px;
-            }
-            
-            #roulette-wheel {
-                grid-template-columns: repeat(2, 1fr) !important;
-                gap: 15px;
-            }
-            
-            .attribute-option {
-                padding: 20px 15px;
-            }
-            
-            .played-cards-grid {
-                grid-template-columns: 1fr !important;
-                gap: 15px;
-            }
-            
-            .modal-content {
-                padding: 30px 20px !important;
-                margin: 20px;
-            }
-            
-            .standings-list > div {
-                font-size: 1em !important;
-                padding: 12px 15px !important;
-            }
-        }
-        
-        @media (max-width: 480px) {
-            .card {
-                margin: 5px 0;
-            }
-            
-            .current-turn-indicator {
-                padding: 10px 15px;
-                font-size: 0.85em;
-            }
-            
-            .player-hand.current-turn::before {
-                font-size: 0.8em;
-                padding: 6px 15px;
-            }
-            
-            .attribute-option {
-                padding: 15px 10px;
-            }
-            
-            .attribute-option > div:first-child {
-                font-size: 2.5em !important;
-            }
-        }
-    `;
-    
-    document.head.appendChild(style);
-}
+// Funciones para el menú del juego
+window.toggleGameMenu = function() {
+    const modal = document.getElementById('gameMenuModal');
+    if (modal) {
+        modal.classList.toggle('active');
+    }
+};
+
+window.closeModal = function(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.classList.remove('active');
+    }
+};
+
+window.toggleSound = function() {
+    // Implementar lógica de sonido
+    showAlert('Función de sonido no implementada', 'info');
+};
+
+window.showGameRules = function() {
+    // Implementar modal de reglas
+    showAlert('Reglas: Cada jugador juega una carta por ronda. Gana quien tenga el valor más alto del atributo seleccionado.', 'info');
+};
+
+window.playAgain = function() {
+    cleanupGame();
+    redirectToLobby();
+};
 
 // ==========================================
 // EVENT LISTENERS
@@ -1779,15 +1539,6 @@ window.addEventListener('online', function() {
 
 // Atajos de teclado
 document.addEventListener('keydown', function(e) {
-    // ESC para cerrar modales
-    if (e.key === 'Escape') {
-        const modals = document.querySelectorAll('.modal');
-        modals.forEach(modal => {
-            if (modal.style.display !== 'none') {
-                modal.remove();
-            }
-        });
-    }
     
     // F5 para actualizar estado del juego
     if (e.key === 'F5' && !gameState.gameFinished) {
@@ -1800,7 +1551,7 @@ document.addEventListener('keydown', function(e) {
     if (gameState.currentPlayerId === gameState.playerId && !gameState.gameFinished) {
         const num = parseInt(e.key);
         if (num >= 1 && num <= 8) {
-            const cards = document.querySelectorAll('.card.selectable');
+            const cards = document.querySelectorAll('.hand-card.selectable');
             if (cards[num - 1]) {
                 cards[num - 1].click();
             }
@@ -1808,8 +1559,301 @@ document.addEventListener('keydown', function(e) {
     }
 });
 
+// Cerrar modales al hacer click en el backdrop
+document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('modal-backdrop')) {
+        const modal = e.target.closest('.pokemon-modal');
+        if (modal && !modal.classList.contains('roulette-modal')) {
+            modal.classList.remove('active');
+        }
+    }
+});
+
 // ==========================================
-// INICIALIZACIÓN DE ESTILOS Y CLEANUP
+// ESTILOS CSS DINÁMICOS
+// ==========================================
+
+function addGameStyles() {
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideUp {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        @keyframes slideOutRight {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @keyframes bounce {
+            0% { transform: scale(0); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        /* Cartas en la mano */
+        .hand-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .hand-card:hover {
+            transform: translateY(-10px) scale(1.05);
+        }
+        
+        .hand-card.selectable {
+            animation: pulse 2s infinite;
+            border-color: var(--pokemon-yellow);
+            box-shadow: 0 0 20px rgba(255, 204, 0, 0.5);
+        }
+        
+        .hand-card.selectable:hover {
+            transform: translateY(-15px) scale(1.1);
+            box-shadow: 0 15px 40px rgba(255, 204, 0, 0.7);
+        }
+        
+        .hand-card.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+            filter: grayscale(50%);
+        }
+        
+        /* Atributos destacados */
+        .card-attr.highlight {
+            background: linear-gradient(135deg, var(--pokemon-yellow), var(--pokemon-orange));
+            color: white;
+            font-weight: bold;
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(255, 204, 0, 0.4);
+            border: 2px solid var(--pokemon-yellow);
+        }
+        
+        /* Sección de mano del jugador */
+        .player-hand-section.current-turn {
+            background: linear-gradient(180deg, transparent 0%, rgba(255, 204, 0, 0.1) 20%, rgba(255, 204, 0, 0.2) 100%);
+            border-top-color: var(--pokemon-yellow);
+            box-shadow: 0 -4px 20px rgba(255, 204, 0, 0.3);
+        }
+        
+        .player-hand-section.current-turn::before {
+            content: "";
+            position: absolute;
+            top: -3px;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--pokemon-yellow), var(--pokemon-orange), var(--pokemon-yellow));
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        /* Posiciones de batalla */
+        .position-slot.has-card {
+            border-color: var(--pokemon-green) !important;
+            background: rgba(76, 175, 80, 0.2) !important;
+            box-shadow: 0 0 20px rgba(76, 175, 80, 0.4);
+        }
+        
+        .position-slot:hover .slot-glow {
+            opacity: 1;
+            animation: slotPulse 1s ease-in-out infinite;
+        }
+        
+        @keyframes slotPulse {
+            0%, 100% { transform: scale(1); opacity: 0.1; }
+            50% { transform: scale(1.05); opacity: 0.3; }
+        }
+        
+        /* Modales Pokemon */
+        .pokemon-modal.active {
+            display: flex !important;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .pokemon-modal .modal-container {
+            animation: slideUp 0.3s ease;
+        }
+        
+        /* Alertas Pokemon */
+        .pokemon-alerts {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1100;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-width: 400px;
+        }
+        
+        .pokemon-alert {
+            padding: 15px 20px;
+            border-radius: 15px;
+            font-weight: 600;
+            animation: slideInRight 0.3s ease;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        }
+        
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        /* Efectos de los avatares */
+        .avatar-ring.active {
+            animation: avatarPulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes avatarPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        /* Efectos del orbe central */
+        .center-orb {
+            animation: orbPulse 3s ease-in-out infinite;
+        }
+        
+        @keyframes orbPulse {
+            0%, 100% { 
+                transform: scale(1);
+                box-shadow: 0 0 30px rgba(255, 204, 0, 0.8), inset 0 0 30px rgba(255, 255, 255, 0.3);
+            }
+            50% { 
+                transform: scale(1.1);
+                box-shadow: 0 0 50px rgba(255, 204, 0, 1), inset 0 0 30px rgba(255, 255, 255, 0.5);
+            }
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .pokemon-alerts {
+                right: 10px;
+                left: 10px;
+                max-width: none;
+            }
+            
+            .modal-container {
+                width: 95% !important;
+                margin: 10px;
+                max-height: 90vh;
+                overflow-y: auto;
+            }
+            
+            .hand-card {
+                min-width: 120px;
+                width: 120px;
+            }
+            
+            .cards-comparison > div {
+                grid-template-columns: 1fr !important;
+            }
+            
+            .battle-position {
+                width: 80px;
+                height: 90px;
+            }
+            
+            .central-battlefield {
+                width: 400px;
+                height: 400px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .hand-card {
+                min-width: 100px;
+                width: 100px;
+                height: 140px;
+            }
+            
+            .modal-container {
+                width: 98% !important;
+                margin: 5px;
+            }
+            
+            .pokemon-alert {
+                padding: 12px 15px;
+                font-size: 0.9em;
+            }
+            
+            .central-battlefield {
+                width: 320px;
+                height: 320px;
+            }
+            
+            .battle-circle {
+                width: 250px;
+                height: 250px;
+            }
+        }
+        
+        /* Animaciones personalizadas para la ruleta */
+        .roulette-modal .attribute-option {
+            transition: all 0.2s ease !important;
+        }
+        
+        .roulette-modal .attribute-option:hover {
+            transform: scale(1.05);
+            border-color: var(--pokemon-yellow) !important;
+            background: rgba(255, 204, 0, 0.1) !important;
+        }
+        
+        /* Efectos de partículas de fondo */
+        .particles-bg {
+            animation: particlesFloat 20s ease-in-out infinite;
+        }
+        
+        @keyframes particlesFloat {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            33% { transform: translate(10px, -10px) rotate(120deg); }
+            66% { transform: translate(-5px, 15px) rotate(240deg); }
+        }
+        
+        /* Efectos del dragón central */
+        .dragon-logo {
+            animation: dragonBreath 4s ease-in-out infinite;
+        }
+        
+        @keyframes dragonBreath {
+            0%, 100% { transform: scale(1); filter: hue-rotate(0deg); }
+            50% { transform: scale(1.1); filter: hue-rotate(20deg); }
+        }
+        
+        /* Efectos de las estrellas */
+        .stars {
+            animation: starsRotate 5s linear infinite;
+        }
+        
+        @keyframes starsRotate {
+            from { transform: translateX(-50%) rotate(0deg); }
+            to { transform: translateX(-50%) rotate(360deg); }
+        }
+    `;
+    
+    document.head.appendChild(style);
+}
+
+// ==========================================
+// INICIALIZACIÓN FINAL
 // ==========================================
 
 // Añadir estilos cuando se carga el script
@@ -1818,7 +1862,7 @@ addGameStyles();
 // Limpiar al cerrar la ventana
 window.addEventListener('unload', cleanupGame);
 
-// Exponer funciones globales necesarias para HTML
+// Exponer funciones globales necesarias
 window.startNewRound = startNewRound;
 window.returnToLobby = () => {
     cleanupGame();
@@ -1834,10 +1878,14 @@ if (window.location.hostname === 'localhost' || window.location.hostname === '12
         showError,
         cleanupGame,
         startGameLoop,
-        stopGameLoop
+        stopGameLoop,
+        showAttributeRouletteAnimation: (attr, name) => showAttributeRouletteAnimation(attr, name)
     };
     
     console.log('🎮 Dragon Game Debug Mode Enabled');
     console.log('Accede a window.gameState para ver el estado del juego');
     console.log('Accede a window.debugGame para funciones de debug');
+    console.log('Ejemplo: window.debugGame.showAttributeRouletteAnimation("fuerza", "Fuerza")');
 }
+
+console.log('🐉 Dragon Game JavaScript Cargado Correctamente');
