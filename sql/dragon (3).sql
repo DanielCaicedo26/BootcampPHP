@@ -43,6 +43,7 @@ CREATE TABLE `cards` (
 -- Volcado de datos para la tabla `cards`
 --
 
+
 INSERT INTO `cards` (`id`, `name`, `altura_mts`, `tecnica`, `fuerza`, `peleas_ganadas`, `velocidad_percent`, `ki`, `image_url`) VALUES
 (1, 'Goku', 1.75, 9.500, 95, 87, 92, 98, '/BootcampPHP/assets/images/cards/goku.jpg'),
 (2, 'Vegeta', 1.64, 9.200, 92, 78, 90, 95, '/BootcampPHP/assets/images/cards/vegeta.jpg'),
@@ -103,6 +104,9 @@ INSERT INTO `cards` (`id`, `name`, `altura_mts`, `tecnica`, `fuerza`, `peleas_ga
 (57, 'King Piccolo', 2.50, 8.800, 82, 65, 78, 88, '/images/cards/king_piccolo.jpg'),
 (58, 'Shenron', 9.99, 9.500, 88, 85, 70, 95, '/images/cards/shenron.jpg'),
 (59, 'Porunga', 9.99, 9.200, 85, 78, 65, 92, '/images/cards/porunga.jpg');
+
+
+
 
 -- --------------------------------------------------------
 
