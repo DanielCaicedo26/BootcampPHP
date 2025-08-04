@@ -242,6 +242,7 @@ body {
     display: flex;
     align-items: center;
     gap: 10px;
+    height: 1%;
 }
 
 .players-config {
@@ -382,9 +383,6 @@ body {
     background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
     border-radius: 15px;
     box-shadow: 0 8px 25px rgba(76, 175, 80, 0.3);
-    margin-top: -1660px;
-    width: 48%;
-    height: 130px;
 }
 
 .start-game-btn {
