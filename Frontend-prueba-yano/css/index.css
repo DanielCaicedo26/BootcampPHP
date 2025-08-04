@@ -15,13 +15,9 @@ body {
     align-items: center;
     justify-content: center;
     padding: 20px;
-}
-
-/*logo dragoncards*/
-.logodragoncards{
-    width: 100%;
-    height: auto;
-    position: absolute;
+    background: url(../Img/fondo.png); 
+    background-repeat: no-repeat;
+    background-size: cover;
 }
 
 /* Contenedor principal */
