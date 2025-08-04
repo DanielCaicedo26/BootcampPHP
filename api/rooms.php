@@ -1,4 +1,5 @@
 <?php
+ob_clean();
 require_once '../config/database.php';
 require_once '../config/session.php';
 require_once '../classes/GameRoom.php';
@@ -39,30 +40,44 @@ switch ($method) {
                 break;
                 
             case 'join':
+                // Añadir logging para debug
+                error_log("Datos recibidos en join: " . print_r($input, true));
+    
                 $roomCode = sanitizeInput($input['room_code'] ?? '');
                 $playerName = sanitizeInput($input['player_name'] ?? '');
-                $userId = $_SESSION['user_id'] ?? null;
-                
+    
+                // Verificar datos
                 if (empty($roomCode) || empty($playerName)) {
-                    jsonResponse(['error' => 'Código de sala y nombre de jugador son requeridos'], 400);
+                    jsonResponse([
+                        'error' => 'Código de sala y nombre de jugador son requeridos',
+                        'received' => [
+                            'room_code' => $roomCode,
+                            'player_name' => $playerName
+                        ]
+                    ], 400);
                 }
-                
+    
+                // Obtener sala
                 $room = $gameRoom->getRoomByCode($roomCode);
                 if (!$room) {
-                    jsonResponse(['error' => 'Sala no encontrada'], 404);
+                    jsonResponse(['error' => 'Sala no encontrada', 'code' => $roomCode], 404);
                 }
-                
+    
+                // Verificar estado de sala
                 if ($room['status'] !== 'waiting') {
-                    jsonResponse(['error' => 'La sala no está disponible para nuevos jugadores'], 400);
+                    jsonResponse(['error' => 'La sala no está disponible', 'status' => $room['status']], 400);
                 }
-                
-                $playerId = $player->addPlayerToRoom($room['id'], $playerName, $userId);
+    
+                // Añadir jugador
+                $playerId = $player->addPlayerToRoom($room['id'], $playerName);
                 if ($playerId) {
-                    $_SESSION['current_room_id'] = $room['id'];
-                    $_SESSION['current_player_id'] = $playerId;
-                    jsonResponse(['success' => true, 'player_id' => $playerId, 'room_id' => $room['id']]);
+                    jsonResponse([
+                        'success' => true,
+                        'player_id' => $playerId,
+                        'room_id' => $room['id']
+                    ]);
                 } else {
-                    jsonResponse(['error' => 'No se pudo unir a la sala (puede estar llena)'], 400);
+                    jsonResponse(['error' => 'Error al añadir jugador'], 500);
                 }
                 break;
                 
@@ -115,23 +130,28 @@ switch ($method) {
                 ]);
                 break;
                 
+            case 'start_round':
+                $roomId = intval($input['room_id'] ?? 0);
+                
+                if (!$roomId) {
+                    jsonResponse(['error' => 'ID de sala requerido'], 400);
+                }
+                
+                $result = $game->startNewRound($roomId);
+                jsonResponse($result);
+                break;
+                
             case 'play_card':
                 $roomId = intval($input['room_id'] ?? 0);
                 $playerId = intval($input['player_id'] ?? 0);
                 $cardId = intval($input['card_id'] ?? 0);
-                $roundId = intval($input['round_id'] ?? 0);
-                $attributeValue = intval($input['attribute_value'] ?? 0);
                 
-                if (!$roomId || !$playerId || !$cardId || !$roundId || !$attributeValue) {
+                if (!$roomId || !$playerId || !$cardId) {
                     jsonResponse(['error' => 'Datos incompletos'], 400);
                 }
                 
-                $success = $game->playCard($roomId, $playerId, $cardId, $roundId, $attributeValue);
-                if ($success) {
-                    jsonResponse(['success' => true]);
-                } else {
-                    jsonResponse(['error' => 'Error al jugar carta'], 500);
-                }
+                $result = $game->playCard($roomId, $playerId, $cardId);
+                jsonResponse($result);
                 break;
                 
             default:
@@ -162,14 +182,21 @@ switch ($method) {
                 break;
                 
             case 'maps':
-                $maps = $game->getAllMaps();
-                jsonResponse(['maps' => $maps]);
+                try {
+                    $maps = $game->getAllMaps();
+                    jsonResponse(['maps' => $maps]);
+                } catch (Exception $e) {
+                    jsonResponse(['error' => 'Error al cargar mapas: ' . $e->getMessage()], 500);
+                }
                 break;
                 
             case 'cards':
-                // NUEVO: Endpoint para obtener todas las cartas
-                $cards = $game->getAllCards();
-                jsonResponse(['cards' => $cards]);
+                try {
+                    $cards = $game->getAllCards();
+                    jsonResponse(['cards' => $cards]);
+                } catch (Exception $e) {
+                    jsonResponse(['error' => 'Error al cargar cartas: ' . $e->getMessage()], 500);
+                }
                 break;
                 
             case 'player_cards':
@@ -192,6 +219,10 @@ switch ($method) {
                 }
                 
                 $room = $gameRoom->getRoomById($roomId);
+                if (!$room) {
+                    jsonResponse(['error' => 'Sala no encontrada'], 404);
+                }
+                
                 $players = $player->getPlayersInRoom($roomId);
                 
                 $selectedMap = null;
@@ -206,6 +237,45 @@ switch ($method) {
                 ]);
                 break;
                 
+            case 'round_result':
+                $roomId = intval($_GET['room_id'] ?? 0);
+                $roundNumber = intval($_GET['round'] ?? 0);
+                
+                if (!$roomId || !$roundNumber) {
+                    jsonResponse(['error' => 'Datos incompletos'], 400);
+                }
+                
+                $result = $game->getRoundResult($roomId, $roundNumber);
+                jsonResponse($result);
+                break;
+                
+            case 'final_results':
+                $roomId = intval($_GET['room_id'] ?? 0);
+                
+                if (!$roomId) {
+                    jsonResponse(['error' => 'ID de sala requerido'], 400);
+                }
+                
+                $results = $game->getFinalResults($roomId);
+                jsonResponse($results);
+                break;
+                
+            case 'game_state':
+                $roomId = intval($_GET['room_id'] ?? 0);
+                
+                if (!$roomId) {
+                    jsonResponse(['error' => 'ID de sala requerido'], 400);
+                }
+                
+                $gameState = $game->getGameState($roomId);
+                $isFinished = $game->isGameFinished($roomId);
+                
+                jsonResponse([
+                    'game_state' => $gameState,
+                    'is_finished' => $isFinished
+                ]);
+                break;
+                
             default:
                 jsonResponse(['error' => 'Acción no válida'], 400);
         }
@@ -214,4 +284,3 @@ switch ($method) {
     default:
         jsonResponse(['error' => 'Método no permitido'], 405);
 }
-?>

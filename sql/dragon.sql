@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 04-08-2025 a las 01:28:08
+-- Tiempo de generación: 04-08-2025 a las 05:40:20
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.0.30
 
@@ -44,7 +44,7 @@ CREATE TABLE `cards` (
 --
 
 INSERT INTO `cards` (`id`, `name`, `altura_mts`, `tecnica`, `fuerza`, `peleas_ganadas`, `velocidad_percent`, `ki`, `image_url`) VALUES
-(1, 'Goku', 1.75, 9.500, 95, 87, 92, 98, '/images/cards/goku.jpg'),
+(1, 'Goku', 1.75, 9.500, 95, 87, 92, 98, 'https://vignette.wikia.nocookie.net/dragonball/images/b/bc/Planeta_del_Kaio_del_Norte.png/revision/latest/scale-to-width-down/2000?cb=20200826145834&path-prefix=es'),
 (2, 'Vegeta', 1.64, 9.200, 92, 78, 90, 95, '/images/cards/vegeta.jpg'),
 (3, 'Gohan', 1.76, 8.800, 88, 45, 85, 92, '/images/cards/gohan.jpg'),
 (4, 'Goten', 1.23, 7.500, 75, 32, 88, 85, '/images/cards/goten.jpg'),
@@ -155,13 +155,10 @@ CREATE TABLE `maps` (
 --
 
 INSERT INTO `maps` (`id`, `name`, `description`, `image_url`) VALUES
-(1, 'Planeta Tierra', 'El hogar de Goku y los Guerreros Z', '/images/maps/earth.jpg'),
-(2, 'Planeta Namek', 'Mundo natal de Piccolo y las Esferas del Dragón originales', '/images/maps/namek.jpg'),
-(3, 'Planeta Vegeta', 'El planeta destruido de la raza Saiyajin', '/images/maps/vegeta.jpg'),
-(4, 'Planeta Kaio', 'Pequeño planeta del Kaio del Norte', '/images/maps/kaio.jpg'),
-(5, 'Torneo de Artes Marciales', 'El ring donde se celebran los torneos', '/images/maps/tournament.jpg'),
-(6, 'Cámara del Tiempo', 'Dimensión donde el tiempo fluye diferente', '/images/maps/time_chamber.jpg'),
-(7, 'Planeta Bills', 'Mundo del Dios de la Destrucción', '/images/maps/beerus.jpg');
+(1, 'Planeta Tierra', 'El hogar de Goku y los Guerreros Z', 'https://xombit.com/files/2014/05/casa-son-goku.jpg'),
+(2, 'Planeta Namek', 'Mundo natal de Piccolo y las Esferas del Dragón originales', 'https://i.pinimg.com/originals/5c/6d/5f/5c6d5ffd63ffc761e8a965366b986f68.jpg'),
+(3, 'Planeta Vegeta', 'El planeta destruido de la raza Saiyajin', 'https://animerant.com.br/wp-content/uploads/2023/12/Dragon-Ball-Super-1.webp'),
+(4, 'Planeta Kaio', 'Pequeño planeta del Kaio del Norte', 'https://vignette.wikia.nocookie.net/dragonball/images/b/bc/Planeta_del_Kaio_del_Norte.png/revision/latest/scale-to-width-down/2000?cb=20200826145834&path-prefix=es');
 
 -- --------------------------------------------------------
 
@@ -228,7 +225,8 @@ CREATE TABLE `users` (
 
 INSERT INTO `users` (`id`, `username`, `password`, `created_at`) VALUES
 (1, 'daniel', '$2y$10$TOe73IgYrkZXC.66lkc6TOeKWZvgfgn4FZ83BRM0n3q/FNBPrBJYS', '2025-08-03 16:44:14'),
-(2, 'dadada', '$2y$10$GEh1oivKHT8px5kjabU1z.2h73h7CIms5P/w27ww7G65hXb.UBgwe', '2025-08-03 18:46:37');
+(2, 'dadada', '$2y$10$GEh1oivKHT8px5kjabU1z.2h73h7CIms5P/w27ww7G65hXb.UBgwe', '2025-08-03 18:46:37'),
+(3, 'da', '$2y$10$COC0krlrresKfbVersZW8.2V56CBKOwKP/pp7YcZc4ltQ2v4spqJG', '2025-08-04 01:35:39');
 
 --
 -- Índices para tablas volcadas
@@ -344,7 +342,7 @@ ALTER TABLE `round_cards`
 -- AUTO_INCREMENT de la tabla `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- Restricciones para tablas volcadas
