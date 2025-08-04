@@ -1,3 +1,4 @@
+const API_AUTH = '/BootcampPHP/api/auth.php';
 const API_ROOMS = '/BootcampPHP/api/rooms.php';
 const API_GAME = '/BootcampPHP/api/game.php';
 
