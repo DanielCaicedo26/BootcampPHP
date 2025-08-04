@@ -7,112 +7,429 @@
     <link rel="stylesheet" href="../css/game.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Bubblegum+Sans&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Bubblegum+Sans:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <header class="game-header">
-        <div class="header-content">
-            <div class="game-info">
-                <h1>🐉 DRAGON CARDS</h1>
-                <div class="match-info">
-                    <span id="currentRound">Ronda: 1</span>
-                    <span id="currentTurn">Preparando juego...</span>
-                </div>
+    <!-- Fondo de partículas animadas -->
+    <div class="particles-bg" id="particlesBg"></div>
+    
+    <!-- Header con información del juego -->
+    <header class="game-header-pokemon">
+        <div class="header-left">
+            <div class="game-logo">
+                <span class="dragon-icon">🐉</span>
+                <span class="game-title">DRAGON CARDS</span>
             </div>
-            <div class="player-stats">
-                <span id="currentPlayer">Sistema de Turnos</span>
-                <span id="cardsLeft">Cartas restantes: 8</span>
+            <div class="game-status-info">
+                <span class="round-display" id="currentRound">Ronda: 1/8</span>
+                <span class="attribute-display" id="currentAttribute">🎲 Seleccionando...</span>
             </div>
+        </div>
+        <div class="header-right">
+            <div class="timer-display">
+                <span class="timer-icon">⏱️</span>
+                <span class="timer-text" id="gameTimer">00:00</span>
+            </div>
+            <button class="menu-btn" onclick="toggleGameMenu()">⚙️</button>
         </div>
     </header>
 
-    <main class="game-container">
-        <!-- Indicador de turno actual -->
-        <div class="current-turn-indicator" id="turnIndicator" style="display: none;">
-            <h3 id="turnIndicatorText">Turno de: Jugador</h3>
-        </div>
-
-        <!-- Área de juego principal -->
-        <div class="game-board">
-            <!-- Área donde se muestran las cartas jugadas -->
-            <div class="played-cards-area">
-                <h3>🎯 Cartas en Juego</h3>
-                <div class="cards-in-play" id="cardsInPlay">
-                    <p style="text-align: center; color: #666; padding: 40px;">
-                        Las cartas jugadas aparecerán aquí
-                    </p>
+    <!-- Tablero principal estilo Pokémon -->
+    <main class="pokemon-game-board">
+        <!-- Información de jugadores en las esquinas -->
+        <div class="player-zone top-left" id="playerZone1">
+            <div class="player-card">
+                <div class="player-avatar">
+                    <div class="avatar-ring active">
+                        <img src="../Img/avatar1.png" alt="Jugador 1" onerror="this.style.display='none'">
+                        <div class="avatar-placeholder">👤</div>
+                    </div>
+                    <div class="turn-indicator">🎯</div>
                 </div>
-            </div>
-
-            <!-- Marcador y estado del juego -->
-            <div class="game-status">
-                <div class="scoreboard">
-                    <h3>🏆 Marcador</h3>
-                    <div id="playerScores">
-                        <div style="text-align: center; color: #666; padding: 20px;">
-                            Cargando marcador...
+                <div class="player-info">
+                    <div class="player-name">Jugador 1</div>
+                    <div class="player-stats">
+                        <div class="stat-item">
+                            <span class="stat-icon">🏆</span>
+                            <span class="stat-value" id="player1Score">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-icon">🃏</span>
+                            <span class="stat-value" id="player1Cards">8</span>
                         </div>
                     </div>
                 </div>
-                
-                <div class="current-attribute">
-                    <h3>🎲 Atributo Actual</h3>
-                    <span id="selectedAttribute">Esperando ronda...</span>
-                </div>
-
-                <div class="turn-info">
-                    <h3>🎮 Información del Turno</h3>
-                    <div class="current-player-name" id="currentPlayerDisplay">
-                        Preparando...
-                    </div>
-                    <div id="turnInstructions">
-                        El juego comenzará pronto
+                <div class="player-deck">
+                    <div class="deck-stack">
+                        <div class="card-back"></div>
+                        <div class="card-back"></div>
+                        <div class="card-back"></div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Mano del jugador actual -->
-        <div class="player-hand" id="playerHandContainer">
-            <h3>🃏 Cartas del Jugador Actual</h3>
-            <div class="cards-container" id="playerCards">
-                <div style="text-align: center; color: #666; padding: 40px;">
-                    Las cartas aparecerán cuando sea el turno del jugador
+        <div class="player-zone top-right" id="playerZone2">
+            <div class="player-card">
+                <div class="player-avatar">
+                    <div class="avatar-ring">
+                        <img src="../Img/avatar2.png" alt="Jugador 2" onerror="this.style.display='none'">
+                        <div class="avatar-placeholder">👤</div>
+                    </div>
+                </div>
+                <div class="player-info">
+                    <div class="player-name">Jugador 2</div>
+                    <div class="player-stats">
+                        <div class="stat-item">
+                            <span class="stat-icon">🏆</span>
+                            <span class="stat-value" id="player2Score">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-icon">🃏</span>
+                            <span class="stat-value" id="player2Cards">8</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="player-deck">
+                    <div class="deck-stack">
+                        <div class="card-back"></div>
+                        <div class="card-back"></div>
+                        <div class="card-back"></div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Panel de información de la ronda -->
-        <div class="round-info">
-            <div class="round-status">
-                <h3>📊 Estado de la Ronda</h3>
-                <div id="roundStatus">
-                    <p>Preparando nueva partida...</p>
+        <div class="player-zone bottom-left" id="playerZone3">
+            <div class="player-card">
+                <div class="player-avatar">
+                    <div class="avatar-ring">
+                        <img src="../Img/avatar3.png" alt="Jugador 3" onerror="this.style.display='none'">
+                        <div class="avatar-placeholder">👤</div>
+                    </div>
+                </div>
+                <div class="player-info">
+                    <div class="player-name">Jugador 3</div>
+                    <div class="player-stats">
+                        <div class="stat-item">
+                            <span class="stat-icon">🏆</span>
+                            <span class="stat-value" id="player3Score">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-icon">🃏</span>
+                            <span class="stat-value" id="player3Cards">8</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="player-deck">
+                    <div class="deck-stack">
+                        <div class="card-back"></div>
+                        <div class="card-back"></div>
+                        <div class="card-back"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="player-zone bottom-right" id="playerZone4">
+            <div class="player-card">
+                <div class="player-avatar">
+                    <div class="avatar-ring">
+                        <img src="../Img/avatar4.png" alt="Jugador 4" onerror="this.style.display='none'">
+                        <div class="avatar-placeholder">👤</div>
+                    </div>
+                </div>
+                <div class="player-info">
+                    <div class="player-name">Jugador 4</div>
+                    <div class="player-stats">
+                        <div class="stat-item">
+                            <span class="stat-icon">🏆</span>
+                            <span class="stat-value" id="player4Score">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-icon">🃏</span>
+                            <span class="stat-value" id="player4Cards">8</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="player-deck">
+                    <div class="deck-stack">
+                        <div class="card-back"></div>
+                        <div class="card-back"></div>
+                        <div class="card-back"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tablero central circular -->
+        <div class="central-battlefield">
+            <!-- Área de información del atributo y ronda -->
+            <div class="battle-info-panel">
+                <div class="current-attribute-info">
+                    <div class="attribute-icon-big" id="attributeIconBig">🎲</div>
+                    <div class="attribute-name-big" id="attributeNameBig">Preparando Ronda</div>
+                    <div class="round-counter" id="roundCounter">Ronda 1 de 8</div>
+                </div>
+            </div>
+
+            <!-- Círculo central para cartas jugadas -->
+            <div class="battle-circle">
+                <div class="center-orb">
+                    <div class="orb-glow"></div>
+                    <div class="dragon-ball-center">
+                        <div class="stars">⭐</div>
+                        <div class="dragon-logo">🐉</div>
+                    </div>
+                </div>
+
+                <!-- Posiciones para cartas jugadas alrededor del círculo -->
+                <div class="battle-position pos-1" data-player="1">
+                    <div class="position-slot">
+                        <div class="slot-glow"></div>
+                        <div class="slot-content">
+                            <span class="player-slot-name">Jugador 1</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="battle-position pos-2" data-player="2">
+                    <div class="position-slot">
+                        <div class="slot-glow"></div>
+                        <div class="slot-content">
+                            <span class="player-slot-name">Jugador 2</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="battle-position pos-3" data-player="3">
+                    <div class="position-slot">
+                        <div class="slot-glow"></div>
+                        <div class="slot-content">
+                            <span class="player-slot-name">Jugador 3</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="battle-position pos-4" data-player="4">
+                    <div class="position-slot">
+                        <div class="slot-glow"></div>
+                        <div class="slot-content">
+                            <span class="player-slot-name">Jugador 4</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="battle-position pos-5" data-player="5">
+                    <div class="position-slot">
+                        <div class="slot-glow"></div>
+                        <div class="slot-content">
+                            <span class="player-slot-name">Jugador 5</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="battle-position pos-6" data-player="6">
+                    <div class="position-slot">
+                        <div class="slot-glow"></div>
+                        <div class="slot-content">
+                            <span class="player-slot-name">Jugador 6</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="battle-position pos-7" data-player="7">
+                    <div class="position-slot">
+                        <div class="slot-glow"></div>
+                        <div class="slot-content">
+                            <span class="player-slot-name">Jugador 7</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Indicador de turno dinámico -->
+            <div class="turn-arrow-container">
+                <div class="turn-arrow" id="turnArrow">
+                    <div class="arrow-glow"></div>
+                    <div class="arrow-pointer">➤</div>
+                </div>
+                <div class="turn-text" id="turnText">Turno de Jugador 1</div>
+            </div>
+        </div>
+
+        <!-- Paneles laterales de información -->
+        <div class="side-info-left">
+            <div class="info-panel">
+                <div class="panel-header">
+                    <span class="panel-icon">📊</span>
+                    <span class="panel-title">Estado del Juego</span>
+                </div>
+                <div class="panel-content">
+                    <div class="game-progress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="gameProgress" style="width: 12.5%"></div>
+                        </div>
+                        <div class="progress-text">Ronda 1/8</div>
+                    </div>
+                    <div class="game-stats">
+                        <div class="stat-row">
+                            <span class="stat-label">⏱️ Tiempo:</span>
+                            <span class="stat-value" id="gameTimeDisplay">00:00</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">🎯 Atributo:</span>
+                            <span class="stat-value" id="currentAttributeDisplay">-</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">👥 Jugadores:</span>
+                            <span class="stat-value" id="totalPlayersDisplay">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="side-info-right">
+            <div class="info-panel">
+                <div class="panel-header">
+                    <span class="panel-icon">📈</span>
+                    <span class="panel-title">Estadísticas</span>
+                </div>
+                <div class="panel-content">
+                    <div class="attributes-used">
+                        <h4>Atributos Usados</h4>
+                        <div class="attr-list" id="usedAttributesList">
+                            <div class="attr-used">📏 Altura: 0</div>
+                            <div class="attr-used">⚡ Fuerza: 0</div>
+                            <div class="attr-used">🏃 Velocidad: 0</div>
+                            <div class="attr-used">🧠 Técnica: 0</div>
+                            <div class="attr-used">💫 Ki: 0</div>
+                            <div class="attr-used">🏆 Peleas: 0</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </main>
 
-    <!-- Modal para mostrar el resultado de la ronda -->
-    <div class="modal" id="roundResultModal">
-        <div class="modal-content">
-            <h2>🏆 Resultado de la Ronda</h2>
-            <div id="roundWinner"></div>
-            <div id="cardComparison"></div>
-            <button onclick="nextRound()" class="submit-btn">Siguiente Ronda</button>
+    <!-- Área de la mano del jugador actual -->
+    <section class="player-hand-section">
+        <div class="hand-container">
+            <div class="hand-header">
+                <div class="hand-title">
+                    <span class="hand-icon">🃏</span>
+                    <span class="hand-text" id="handTitle">Cartas del Jugador Actual</span>
+                </div>
+                <div class="hand-controls">
+                    <button class="hand-control-btn" id="sortCards" title="Ordenar cartas">
+                        <span>🔄</span>
+                    </button>
+                    <button class="hand-control-btn" id="viewMode" title="Cambiar vista">
+                        <span>👁️</span>
+                    </button>
+                    <div class="cards-counter">
+                        <span id="cardsRemaining">0</span>/<span id="totalCards">8</span>
+                    </div>
+                </div>
+            </div>
+            <div class="hand-cards-area">
+                <div class="cards-hand" id="playerCards">
+                    <div class="no-cards-message">
+                        <div class="no-cards-icon">🃏</div>
+                        <div class="no-cards-text">Las cartas aparecerán aquí cuando sea tu turno</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Modal para resultado de ronda -->
+    <div class="pokemon-modal" id="roundResultModal">
+        <div class="modal-backdrop" onclick="closeModal('roundResultModal')"></div>
+        <div class="modal-container">
+            <div class="modal-header">
+                <h2 class="modal-title">🏆 Resultado de la Ronda</h2>
+                <button class="modal-close" onclick="closeModal('roundResultModal')">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="round-winner-announcement" id="roundWinnerDisplay">
+                    <!-- Se llenará dinámicamente -->
+                </div>
+                <div class="round-comparison" id="roundComparison">
+                    <!-- Se llenará dinámicamente -->
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="pokemon-btn primary" onclick="nextRound()">
+                    <span>Siguiente Ronda</span>
+                    <span class="btn-icon">➡️</span>
+                </button>
+            </div>
         </div>
     </div>
 
     <!-- Modal para fin del juego -->
-    <div class="modal" id="gameOverModal">
-        <div class="modal-content">
-            <h2>🎉 ¡Fin del Juego!</h2>
-            <div id="finalScore"></div>
-            <div id="gameWinner"></div>
-            <button onclick="returnToLobby()" class="submit-btn">Volver al Lobby</button>
+    <div class="pokemon-modal" id="gameOverModal">
+        <div class="modal-backdrop" onclick="closeModal('gameOverModal')"></div>
+        <div class="modal-container">
+            <div class="modal-header">
+                <h2 class="modal-title">🎉 ¡Fin del Juego!</h2>
+            </div>
+            <div class="modal-body">
+                <div class="game-final-results" id="finalGameResults">
+                    <!-- Se llenará dinámicamente -->
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="pokemon-btn secondary" onclick="returnToLobby()">
+                    <span>Volver al Lobby</span>
+                    <span class="btn-icon">🏠</span>
+                </button>
+                <button class="pokemon-btn primary" onclick="playAgain()">
+                    <span>Jugar de Nuevo</span>
+                    <span class="btn-icon">🔄</span>
+                </button>
+            </div>
         </div>
     </div>
 
+    <!-- Modal del menú del juego -->
+    <div class="pokemon-modal" id="gameMenuModal">
+        <div class="modal-backdrop" onclick="closeModal('gameMenuModal')"></div>
+        <div class="modal-container small">
+            <div class="modal-header">
+                <h3 class="modal-title">⚙️ Menú del Juego</h3>
+                <button class="modal-close" onclick="closeModal('gameMenuModal')">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="menu-options">
+                    <button class="menu-option" onclick="toggleSound()">
+                        <span class="option-icon">🔊</span>
+                        <span class="option-text">Sonido: ON</span>
+                    </button>
+                    <button class="menu-option" onclick="showGameRules()">
+                        <span class="option-icon">📖</span>
+                        <span class="option-text">Reglas del Juego</span>
+                    </button>
+                    <button class="menu-option" onclick="returnToLobby()">
+                        <span class="option-icon">🏠</span>
+                        <span class="option-text">Volver al Lobby</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sistema de alertas estilo Pokémon -->
+    <div class="pokemon-alerts" id="alertsContainer">
+        <!-- Las alertas se generarán dinámicamente -->
+    </div>
+
+    <!-- Efectos visuales -->
+    <canvas class="effects-canvas" id="effectsCanvas"></canvas>
+
     <script src="../js/game.js"></script>
+    <script src="../js/pokemon-effects.js"></script>
 </body>
 </html>
