@@ -85,6 +85,11 @@
                                     <p>Cargando mapas...</p>
                                 </div>
                             </div>
+
+                            <!-- Indicador de mapa seleccionado -->
+                            <div id="selectedMapIndicator" class="selected-map-indicator" style="display: none;">
+                                Mapa seleccionado: <span id="selectedMapName"></span>
+                            </div>
                         </div>
                     </div>
 
@@ -101,7 +106,7 @@
 
                     <!-- Botón para iniciar -->
                     <div class="start-game-section">
-                        <button class="start-game-btn" onclick="startLocalGame()">
+                        <button class="start-game-btn" id="startGameBtn" onclick="startLocalGame()" disabled>
                             🚀 ¡Crear Sala y Empezar!
                         </button>
                     </div>

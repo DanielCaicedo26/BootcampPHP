@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dragon Game - Partida en Curso</title>
+    <link rel="stylesheet" href="../css/game.css">
+    <script>
+        // Eliminar el código de inicialización anterior
+        // Se manejará todo desde game.js
+    </script>
+</head>
+<body>
+    <header class="game-header">
+        <div class="header-content">
+            <div class="game-info">
+                <h1>🐉 DRAGON</h1>
+                <div class="match-info">
+                    <span id="currentRound">Ronda: 1</span>
+                    <span id="currentTurn">Turno de: Jugador 1</span>
+                </div>
+            </div>
+            <div class="player-stats">
+                <span id="currentPlayer">Jugador Actual</span>
+                <span id="cardsLeft">Cartas restantes: 8</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="game-container">
+        <!-- Área de juego principal -->
+        <div class="game-board">
+            <!-- Área donde se muestran las cartas jugadas -->
+            <div class="played-cards-area">
+                <h3>Cartas en Juego</h3>
+                <div class="cards-in-play" id="cardsInPlay">
+                    <!-- Las cartas jugadas se mostrarán aquí -->
+                </div>
+            </div>
+
+            <!-- Marcador y estado del juego -->
+            <div class="game-status">
+                <div class="scoreboard">
+                    <h3>Marcador</h3>
+                    <div id="playerScores">
+                        <!-- El marcador se llenará dinámicamente -->
+                    </div>
+                </div>
+                <div class="current-attribute">
+                    <h3>Atributo Actual</h3>
+                    <span id="selectedAttribute">Ninguno seleccionado</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mano del jugador actual -->
+        <div class="player-hand">
+            <h3>Tus Cartas</h3>
+            <div class="cards-container" id="playerCards">
+                <!-- Las cartas del jugador se mostrarán aquí -->
+            </div>
+        </div>
+
+        <!-- Panel de atributos para seleccionar -->
+        <div class="attributes-panel">
+            <h3>Selecciona un Atributo</h3>
+            <div class="attribute-buttons">
+                <button class="attribute-btn" onclick="selectAttribute('altura')">📏 Altura</button>
+                <button class="attribute-btn" onclick="selectAttribute('fuerza')">⚡ Fuerza</button>
+                <button class="attribute-btn" onclick="selectAttribute('velocidad')">🏃 Velocidad</button>
+                <button class="attribute-btn" onclick="selectAttribute('tecnica')">🧠 Técnica</button>
+                <button class="attribute-btn" onclick="selectAttribute('ki')">💫 Ki</button>
+                <button class="attribute-btn" onclick="selectAttribute('peleasGanadas')">🏆 Peleas Ganadas</button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal para mostrar el resultado de la ronda -->
+    <div class="modal" id="roundResultModal">
+        <div class="modal-content">
+            <h2>Resultado de la Ronda</h2>
+            <div id="roundWinner"></div>
+            <div id="cardComparison"></div>
+            <button onclick="nextRound()">Siguiente Ronda</button>
+        </div>
+    </div>
+
+    <!-- Modal para fin del juego -->
+    <div class="modal" id="gameOverModal">
+        <div class="modal-content">
+            <h2>¡Fin del Juego!</h2>
+            <div id="finalScore"></div>
+            <div id="gameWinner"></div>
+            <button onclick="returnToLobby()">Volver al Lobby</button>
+        </div>
+    </div>
+
+    <script src="../js/game.js"></script>
+</body>
+</html>
+            <button onclick="nextRound()">Siguiente Ronda</button>
+        </div>
+    </div>
+
+    <!-- Modal para fin del juego -->
+    <div class="modal" id="gameOverModal">
+        <div class="modal-content">
+            <h2>¡Fin del Juego!</h2>
+            <div id="finalScore"></div>
+            <div id="gameWinner"></div>
+            <button onclick="returnToLobby()">Volver al Lobby</button>
+        </div>
+    </div>
+
+    <script src="../js/game.js"></script>
+</body>
+</html>
