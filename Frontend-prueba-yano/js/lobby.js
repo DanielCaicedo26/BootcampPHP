@@ -196,10 +196,26 @@ function renderMaps(mapsToRender) {
         return;
     }
     
-    mapsGrid.innerHTML = mapsToRender.map(map => `
-        <div class="map-card" onclick="selectMap(${map.id})" id="map-${map.id}"
-             style="background-image: url('/BootcampPHP/images/maps/${map.image_url}')">
-            <div class="map-overlay">
+    // Ajustar las URLs de las imágenes para que sean absolutas
+    const mappedMaps = mapsToRender.map(map => ({
+        ...map,
+        image_url: map.image_url.startsWith('http') ? 
+            map.image_url : 
+            `/BootcampPHP/assets/images/maps/${map.image_url.split('/').pop()}`
+    }));
+    
+    mapsGrid.innerHTML = mappedMaps.map(map => `
+        <div class="map-card" onclick="selectMap('${map.id}')" id="map-${map.id}">
+            <div class="map-image">
+                ${map.image_url ? 
+                    `<img src="${map.image_url}" alt="${map.name}" 
+                         onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">` 
+                    : ''}
+                <div class="map-placeholder" ${map.image_url ? 'style="display:none;"' : ''}>
+                    <span class="map-icon">🗺️</span>
+                </div>
+            </div>
+            <div class="map-info">
                 <div class="map-name">${map.name}</div>
                 <div class="map-description">${map.description || 'Mapa del juego Dragon Ball'}</div>
             </div>
@@ -209,12 +225,17 @@ function renderMaps(mapsToRender) {
 
 function selectMap(mapId) {
     try {
-        const selectedMapData = maps.find(m => m.id === mapId);
+        // Asegurar que comparamos strings
+        const stringMapId = mapId.toString();
+
+        const selectedMapData = maps.find(m => m.id.toString() === stringMapId);
+
         if (!selectedMapData) {
             showAlert('Error: Mapa no encontrado', 'error');
             return;
         }
 
+        // Si llegamos aquí, el mapa es válido
         document.querySelectorAll('.map-card').forEach(card => {
             card.classList.remove('selected');
         });
@@ -224,12 +245,6 @@ function selectMap(mapId) {
             mapCard.classList.add('selected');
             selectedMap = selectedMapData;
             gameConfig.selectedMapId = mapId;
-
-            // Actualizar el fondo del juego con la imagen del mapa
-            document.documentElement.style.setProperty(
-                '--selected-map-bg', 
-                `url('/BootcampPHP/images/maps/${selectedMap.image_url}')`
-            );
             
             // Actualizar indicador visual
             const indicator = document.getElementById('selectedMapIndicator');
@@ -239,6 +254,7 @@ function selectMap(mapId) {
                 indicator.style.display = 'block';
             }
             
+            // Habilitar botón de inicio
             const startButton = document.getElementById('startGameBtn');
             if (startButton) {
                 startButton.disabled = false;
@@ -247,7 +263,7 @@ function selectMap(mapId) {
             showAlert(`Mapa seleccionado: ${selectedMap.name}`, 'success');
         }
     } catch (error) {
-        console.error('Error seleccionando mapa:', error);
+      
         showAlert('Error al seleccionar el mapa', 'error');
     }
 }
@@ -269,9 +285,18 @@ async function createRoomAndStartGame() {
                 is_private: true
             })
         });
+
+        // Verificar si la respuesta es HTML (error) o JSON
+        const contentType = createResponse.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            const text = await createResponse.text();
+            console.error('Respuesta no-JSON del servidor:', text);
+            throw new Error('El servidor respondió con un formato inválido. Por favor, verifica tu sesión.');
+        }
         
         const createData = await createResponse.json();
-        
+        console.log('Respuesta del servidor:', createData);
+
         if (!createData.success) {
             throw new Error(createData.error || 'Error al crear la sala');
         }
@@ -351,8 +376,15 @@ async function createRoomAndStartGame() {
         }
         
     } catch (error) {
-        console.error('Error en createRoomAndStartGame:', error);
-        showAlert(error.message || 'Error al crear la sala', 'error');
+        console.error('Error detallado en createRoomAndStartGame:', error);
+        if (error.message.includes('JSON')) {
+            showAlert('Error: Tu sesión puede haber expirado. Por favor, vuelve a iniciar sesión.', 'error');
+            setTimeout(() => {
+                window.location.href = '../html/index.html';
+            }, 2000);
+        } else {
+            showAlert(error.message || 'Error al crear la sala', 'error');
+        }
     } finally {
         showLoading(false);
     }
@@ -423,7 +455,6 @@ async function confirmStartGame() {
 
         showLoading(true);
         
-        // Asegurarse de que tenemos todos los datos necesarios
         if (!currentRoom || !currentPlayer || !selectedMap) {
             throw new Error('Faltan datos necesarios para iniciar el juego');
         }
@@ -440,8 +471,8 @@ async function confirmStartGame() {
         
         sessionStorage.setItem('gameConfig', JSON.stringify(gameData));
         
-        // Redirigir a la página del juego
-        window.location.href = `game.html?roomId=${currentRoom.id}&playerId=${currentPlayer.db_id}`;
+        // Redirigir usando la ruta correcta
+        window.location.href = 'game.html?roomId=' + currentRoom.id + '&playerId=' + currentPlayer.db_id;
         
     } catch (error) {
         console.error('Error iniciando juego:', error);
@@ -470,7 +501,6 @@ async function loadCards() {
         
         if (data.cards && Array.isArray(data.cards)) {
             cards = data.cards;
-            console.log('Cartas cargadas desde DB:', cards.length);
             renderCards(cards);
         } else {
             throw new Error('No se pudieron cargar las cartas desde la base de datos');
@@ -505,7 +535,7 @@ function renderCards(cardsToRender) {
         <div class="card-item" onclick="showCardDetails(${card.id})">
             <div class="card-image">
                 ${card.image_url ? 
-                    `<img src="/BootcampPHP/images/cards/${card.image_url}" 
+                    `<img src="${card.image_url}" 
                          alt="${card.name}" 
                          onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">` 
                     : ''}
