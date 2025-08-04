@@ -197,24 +197,58 @@ function renderMaps(mapsToRender) {
     }
     
     mapsGrid.innerHTML = mapsToRender.map(map => `
-        <div class="map-card" onclick="selectMap(${map.id})" id="map-${map.id}">
-            <div class="map-icon">🗺️</div>
-            <div class="map-name">${map.name}</div>
-            <div class="map-description">${map.description || 'Mapa del juego Dragon Ball'}</div>
+        <div class="map-card" onclick="selectMap(${map.id})" id="map-${map.id}"
+             style="background-image: url('/BootcampPHP/images/maps/${map.image_url}')">
+            <div class="map-overlay">
+                <div class="map-name">${map.name}</div>
+                <div class="map-description">${map.description || 'Mapa del juego Dragon Ball'}</div>
+            </div>
         </div>
     `).join('');
 }
 
 function selectMap(mapId) {
-    document.querySelectorAll('.map-card').forEach(card => {
-        card.classList.remove('selected');
-    });
-    
-    const mapCard = document.getElementById(`map-${mapId}`);
-    if (mapCard) {
-        mapCard.classList.add('selected');
-        selectedMap = maps.find(m => m.id === mapId);
-        gameConfig.selectedMapId = mapId;
+    try {
+        const selectedMapData = maps.find(m => m.id === mapId);
+        if (!selectedMapData) {
+            showAlert('Error: Mapa no encontrado', 'error');
+            return;
+        }
+
+        document.querySelectorAll('.map-card').forEach(card => {
+            card.classList.remove('selected');
+        });
+        
+        const mapCard = document.getElementById(`map-${mapId}`);
+        if (mapCard) {
+            mapCard.classList.add('selected');
+            selectedMap = selectedMapData;
+            gameConfig.selectedMapId = mapId;
+
+            // Actualizar el fondo del juego con la imagen del mapa
+            document.documentElement.style.setProperty(
+                '--selected-map-bg', 
+                `url('/BootcampPHP/images/maps/${selectedMap.image_url}')`
+            );
+            
+            // Actualizar indicador visual
+            const indicator = document.getElementById('selectedMapIndicator');
+            const mapName = document.getElementById('selectedMapName');
+            if (indicator && mapName) {
+                mapName.textContent = selectedMap.name;
+                indicator.style.display = 'block';
+            }
+            
+            const startButton = document.getElementById('startGameBtn');
+            if (startButton) {
+                startButton.disabled = false;
+            }
+            
+            showAlert(`Mapa seleccionado: ${selectedMap.name}`, 'success');
+        }
+    } catch (error) {
+        console.error('Error seleccionando mapa:', error);
+        showAlert('Error al seleccionar el mapa', 'error');
     }
 }
 
@@ -343,8 +377,9 @@ function startLocalGame() {
 
 function validateGameConfig() {
     // Verificar que se haya seleccionado un mapa
-    if (!selectedMap) {
+    if (!selectedMap || !gameConfig.selectedMapId) {
         showAlert('Por favor selecciona un mapa para jugar', 'error');
+        document.getElementById('mapsSection').scrollIntoView();
         return false;
     }
     
@@ -382,24 +417,35 @@ function hideGameStartModal() {
 
 async function confirmStartGame() {
     try {
+        if (!validateGameConfig()) {
+            return;
+        }
+
         showLoading(true);
         
-        showAlert('¡Juego iniciado correctamente! Todos los jugadores tienen sus cartas asignadas.', 'success');
+        // Asegurarse de que tenemos todos los datos necesarios
+        if (!currentRoom || !currentPlayer || !selectedMap) {
+            throw new Error('Faltan datos necesarios para iniciar el juego');
+        }
         
-        // Aquí podrías redirigir a la pantalla de juego
-        setTimeout(() => {
-            showAlert(`¡El juego está listo en la sala ${currentRoom.room_code}!`, 'success');
-            hideGameStartModal();
-            
-            // Opcional: Mostrar información adicional
-            console.log('Sala creada:', currentRoom);
-            console.log('Jugadores:', gameConfig.players);
-            console.log('Mapa seleccionado:', selectedMap);
-        }, 2000);
+        // Guardar datos del juego en sessionStorage
+        const gameData = {
+            roomId: currentRoom.id,
+            roomCode: currentRoom.room_code,
+            playerId: currentPlayer.db_id,
+            playerName: currentPlayer.name,
+            players: gameConfig.players,
+            selectedMap: selectedMap
+        };
+        
+        sessionStorage.setItem('gameConfig', JSON.stringify(gameData));
+        
+        // Redirigir a la página del juego
+        window.location.href = `game.html?roomId=${currentRoom.id}&playerId=${currentPlayer.db_id}`;
         
     } catch (error) {
-        console.error('Error confirmando inicio:', error);
-        showAlert('Error al confirmar el inicio del juego', 'error');
+        console.error('Error iniciando juego:', error);
+        showAlert('Error al iniciar el juego: ' + error.message, 'error');
     } finally {
         showLoading(false);
     }
@@ -444,12 +490,12 @@ async function loadCards() {
 function renderCards(cardsToRender) {
     const cardsGrid = document.getElementById('cardsGrid');
     
-    if (cardsToRender.length === 0) {
+    if (!cardsToRender || cardsToRender.length === 0) {
         cardsGrid.innerHTML = `
             <div class="empty-state">
                 <div class="empty-icon">🃏</div>
                 <h3>No se encontraron cartas</h3>
-                <p>Intenta ajustar los filtros de búsqueda o verifica la conexión con la base de datos.</p>
+                <p>Intenta ajustar los filtros de búsqueda.</p>
             </div>
         `;
         return;
@@ -458,16 +504,20 @@ function renderCards(cardsToRender) {
     cardsGrid.innerHTML = cardsToRender.map(card => `
         <div class="card-item" onclick="showCardDetails(${card.id})">
             <div class="card-image">
-                ${card.image_url ? `<img src="${card.image_url}" alt="${card.name}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">` : ''}
-                <div style="font-size: 3em; ${card.image_url ? 'display: none;' : ''}">🃏</div>
+                ${card.image_url ? 
+                    `<img src="/BootcampPHP/images/cards/${card.image_url}" 
+                         alt="${card.name}" 
+                         onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">` 
+                    : ''}
+                <div class="card-placeholder" style="font-size: 3em; ${card.image_url ? 'display: none;' : ''}">🃏</div>
             </div>
             <div class="card-content">
-                <div class="card-name">${card.name}</div>
+                <div class="card-name">${card.name || 'Sin nombre'}</div>
                 <div class="card-attributes">
-                    <div class="card-attr"><span>⚡ Fuerza:</span><span>${card.fuerza}</span></div>
-                    <div class="card-attr"><span>🏃 Velocidad:</span><span>${card.velocidad_percent}%</span></div>
-                    <div class="card-attr"><span>🧠 Técnica:</span><span>${card.tecnica}</span></div>
-                    <div class="card-attr"><span>💫 Ki:</span><span>${card.ki}</span></div>
+                    <div class="card-attr"><span>⚡ Fuerza:</span><span>${card.fuerza || 0}</span></div>
+                    <div class="card-attr"><span>🏃 Velocidad:</span><span>${card.velocidad_percent || 0}%</span></div>
+                    <div class="card-attr"><span>🧠 Técnica:</span><span>${card.tecnica || 0}</span></div>
+                    <div class="card-attr"><span>💫 Ki:</span><span>${card.ki || 0}</span></div>
                 </div>
             </div>
         </div>

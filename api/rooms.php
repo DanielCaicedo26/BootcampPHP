@@ -89,10 +89,14 @@ switch ($method) {
                     jsonResponse(['error' => 'ID de sala requerido'], 400);
                 }
                 
-                // Verificar que la sala tenga un mapa seleccionado
                 $room = $gameRoom->getRoomById($roomId);
                 if (!$room || !$room['selected_map_id']) {
                     jsonResponse(['error' => 'La sala debe tener un mapa seleccionado'], 400);
+                }
+                
+                // Inicializar estado del juego
+                if (!$game->initializeGameState($roomId)) {
+                    jsonResponse(['error' => 'Error al inicializar el juego'], 500);
                 }
                 
                 // Asignar cartas a jugadores
@@ -101,13 +105,14 @@ switch ($method) {
                     jsonResponse(['error' => 'Error al asignar cartas'], 500);
                 }
                 
-                // Cambiar estado a jugando
-                $gameRoom->updateRoomStatus($roomId, 'playing');
+                // Obtener estado inicial del juego
+                $gameState = $game->getGameState($roomId);
                 
-                // Obtener información del mapa seleccionado
-                $selectedMap = $game->getMapById($room['selected_map_id']);
-                
-                jsonResponse(['success' => true, 'selected_map' => $selectedMap]);
+                jsonResponse([
+                    'success' => true,
+                    'game_state' => $gameState,
+                    'selected_map' => $game->getMapById($room['selected_map_id'])
+                ]);
                 break;
                 
             case 'play_card':
