@@ -257,6 +257,10 @@ body {
     color: #333;
 }
 
+.letracuadro{
+    font-family: "Bubblegum Sans", sans-serif;
+}
+
 .player-count select {
     width: 100%;
     padding: 12px;
@@ -296,6 +300,7 @@ body {
     border-radius: 8px;
     font-size: 0.95em;
     transition: border-color 0.3s ease;
+    font-family: "Bubblegum Sans", sans-serif;
 }
 
 .player-input input:focus {
@@ -377,6 +382,9 @@ body {
     background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
     border-radius: 15px;
     box-shadow: 0 8px 25px rgba(76, 175, 80, 0.3);
+    margin-top: -1660px;
+    width: 48%;
+    height: 130px;
 }
 
 .start-game-btn {
@@ -437,6 +445,7 @@ body {
     border-radius: 8px;
     font-size: 0.9em;
     background: white;
+    font-family: "Bubblegum Sans", sans-serif;
 }
 
 .cards-filters input {
@@ -824,4 +833,10 @@ body {
     .maps-grid {
         grid-template-columns: 1fr;
     }
+}
+
+.bola{
+    width: 5%;
+    background: url(../Img/bola.png);
+    position: absolute;
 }

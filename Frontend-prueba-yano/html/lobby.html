@@ -26,10 +26,10 @@
         <!-- Navegación principal -->
         <nav class="main-nav">
             <button class="nav-btn active" onclick="switchSection('game')" id="gameBtn">
-                🎮 Nuevo Juego
+                🎮 Sala
             </button>
             <button class="nav-btn" onclick="switchSection('cards')" id="cardsBtn">
-                🃏 Ver Cartas
+                🃏Cartas
             </button>
         </nav>
 
@@ -44,19 +44,20 @@
         <section class="content-section active" id="gameSection">
             <div class="game-setup">
                 <div class="setup-header">
-                    <h2>🎮 Configurar Nuevo Juego</h2>
+                    <div class="bola"></div>
+                    <h2> Configurar  Sala de Juego</h2>
                     <p>Configura los jugadores, selecciona un mapa y comienza una nueva partida</p>
                 </div>
 
                 <div class="setup-content">
                     <!-- Configuración de jugadores -->
                     <div class="players-setup">
-                        <div class="setup-section">
+                        <div class="setup-section" style="height: 24%;">
                             <h3>👥 Jugadores</h3>
                             <div class="players-config">
                                 <div class="player-count">
                                     <label for="playerCount">Número de jugadores:</label>
-                                    <select id="playerCount" onchange="updatePlayerInputs()">
+                                    <select id="playerCount" class="letracuadro" onchange="updatePlayerInputs()">
                                         <option value="2">2 jugadores</option>
                                         <option value="3">3 jugadores</option>
                                         <option value="4">4 jugadores</option>
@@ -93,7 +94,7 @@
                     </div>
 
                     <!-- Información del proceso -->
-                    <div class="setup-section" style="margin-top: 30px;">
+                    <div class="setup-section" style="height: 200px; margin-top: -1850px; width: 48%;">
                         <h3>📋 Proceso del Juego</h3>
                         <div style="color: #666; line-height: 1.6;">
                             <p><strong>1.</strong> Configura los nombres de todos los jugadores</p>
