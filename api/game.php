@@ -1,182 +1,45 @@
 <?php
 class Game {
-    private $conn;
-
+    private $db;
+    
     public function __construct($db) {
-        $this->conn = $db;
+        $this->db = $db;
     }
 
     public function getAllMaps() {
-        $query = "SELECT * FROM maps ORDER BY name";
-        $stmt = $this->conn->prepare($query);
-        $stmt->execute();
-        return $stmt->fetchAll();
-    }
-
-     public function getAllMaps() {
         $stmt = $this->db->prepare("SELECT id, name, description, image_url FROM maps");
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
-    public function getMapById($id) { return null; }
-    public function assignCardsToPlayers($roomId) { return true; }
-    public function playCard($roomId, $playerId, $cardId, $roundId, $attributeValue) { return true; }
-    public function getPlayerCards($roomId, $playerId) { return []; }
 
     public function getMapById($mapId) {
-        $query = "SELECT * FROM maps WHERE id = ?";
-        $stmt = $this->conn->prepare($query);
+        $stmt = $this->db->prepare("SELECT id, name, description, image_url FROM maps WHERE id = ?");
         $stmt->execute([$mapId]);
-        return $stmt->fetch();
-    }
-
-    public function assignCardsToPlayers($roomId) {
-        $players = new Player($this->conn);
-        $playersInRoom = $players->getPlayersInRoom($roomId);
-        
-        // Crear cartas Dragon Ball si no existen
-        $this->createDragonBallCards();
-        
-        // Obtener todas las cartas disponibles
-        $query = "SELECT * FROM cards ORDER BY RAND()";
-        $stmt = $this->conn->prepare($query);
-        $stmt->execute();
-        $allCards = $stmt->fetchAll();
-        
-        if (empty($allCards)) {
-            return false;
-        }
-        
-        // Limpiar cartas previamente asignadas para esta sala
-        $query = "DELETE FROM player_cards WHERE room_id = ?";
-        $stmt = $this->conn->prepare($query);
-        $stmt->execute([$roomId]);
-        
-        // Asignar 8 cartas a cada jugador
-        $cardIndex = 0;
-        foreach ($playersInRoom as $player) {
-            for ($i = 0; $i < 8; $i++) {
-                if ($cardIndex >= count($allCards)) {
-                    // Si no hay suficientes cartas, reiniciar desde el principio
-                    $cardIndex = 0;
-                }
-                
-                $query = "INSERT INTO player_cards (room_id, player_id, card_id) VALUES (?, ?, ?)";
-                $stmt = $this->conn->prepare($query);
-                $stmt->execute([$roomId, $player['id'], $allCards[$cardIndex]['id']]);
-                
-                $cardIndex++;
-            }
-        }
-        return true;
-    }
-
-    private function createDragonBallCards() {
-        // Verificar si ya existen cartas
-        $query = "SELECT COUNT(*) as count FROM cards";
-        $stmt = $this->conn->prepare($query);
-        $stmt->execute();
-        $result = $stmt->fetch();
-        
-        if ($result['count'] > 0) {
-            return; // Ya existen cartas
-        }
-        
-        // Crear cartas de Dragon Ball
-        $dragonBallCards = [
-            
-        ];
-        
-        $query = "INSERT INTO cards (name, altura_mts, tecnica, fuerza, peleas_ganadas, velocidad_percent, ki) VALUES (?, ?, ?, ?, ?, ?, ?)";
-        $stmt = $this->conn->prepare($query);
-        
-        foreach ($dragonBallCards as $card) {
-            $stmt->execute($card);
-        }
-    }
-
-    public function getPlayerCards($roomId, $playerId, $includeUsed = false) {
-        $usedCondition = $includeUsed ? "" : "AND pc.is_used = FALSE";
-        
-        $query = "SELECT c.*, pc.is_used 
-                 FROM player_cards pc 
-                 JOIN cards c ON pc.card_id = c.id 
-                 WHERE pc.room_id = ? AND pc.player_id = ? $usedCondition 
-                 ORDER BY c.name";
-        $stmt = $this->conn->prepare($query);
-        $stmt->execute([$roomId, $playerId]);
-        return $stmt->fetchAll();
-    }
-
-    public function playCard($roomId, $playerId, $cardId, $roundId, $attributeValue) {
-        // Marcar carta como usada
-        $query = "UPDATE player_cards SET is_used = TRUE WHERE room_id = ? AND player_id = ? AND card_id = ?";
-        $stmt = $this->conn->prepare($query);
-        $stmt->execute([$roomId, $playerId, $cardId]);
-        
-        // Registrar carta jugada en la ronda
-        $query = "INSERT INTO round_cards (round_id, player_id, card_id, attribute_value) VALUES (?, ?, ?, ?)";
-        $stmt = $this->conn->prepare($query);
-        return $stmt->execute([$roundId, $playerId, $cardId, $attributeValue]);
-    }
-
-    public function createRound($roomId, $roundNumber, $selectedAttribute) {
-        $query = "INSERT INTO game_rounds (room_id, round_number, selected_attribute) VALUES (?, ?, ?)";
-        $stmt = $this->conn->prepare($query);
-        
-        if ($stmt->execute([$roomId, $roundNumber, $selectedAttribute])) {
-            return $this->conn->lastInsertId();
-        }
-        return false;
-    }
-
-    public function getRoundCards($roundId) {
-        $query = "SELECT rc.*, rp.player_name, c.name as card_name 
-                 FROM round_cards rc 
-                 JOIN room_players rp ON rc.player_id = rp.id 
-                 JOIN cards c ON rc.card_id = c.id 
-                 WHERE rc.round_id = ? 
-                 ORDER BY rc.attribute_value DESC";
-        $stmt = $this->conn->prepare($query);
-        $stmt->execute([$roundId]);
-        return $stmt->fetchAll();
-    }
-
-    public function setRoundWinner($roundId, $winnerId) {
-        $query = "UPDATE game_rounds SET winner_player_id = ? WHERE id = ?";
-        $stmt = $this->conn->prepare($query);
-        return $stmt->execute([$winnerId, $roundId]);
-    }
-
-    public function getGameResults($roomId) {
-        $query = "SELECT rp.player_name, rp.score, u.username 
-                 FROM room_players rp 
-                 LEFT JOIN users u ON rp.user_id = u.id 
-                 WHERE rp.room_id = ? 
-                 ORDER BY rp.score DESC, rp.player_name";
-        $stmt = $this->conn->prepare($query);
-        $stmt->execute([$roomId]);
-        return $stmt->fetchAll();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
     public function getAllCards() {
-        $query = "SELECT * FROM cards ORDER BY name";
-        $stmt = $this->conn->prepare($query);
+        $stmt = $this->db->prepare("SELECT id, name, altura_mts, tecnica, fuerza, peleas_ganadas, velocidad_percent, ki, image_url FROM cards ORDER BY name");
         $stmt->execute();
-        return $stmt->fetchAll();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    // Función para obtener estadísticas de una carta por ID
     public function getCardById($cardId) {
-        $query = "SELECT * FROM cards WHERE id = ?";
-        $stmt = $this->conn->prepare($query);
+        $stmt = $this->db->prepare("SELECT id, name, altura_mts, tecnica, fuerza, peleas_ganadas, velocidad_percent, ki, image_url FROM cards WHERE id = ?");
         $stmt->execute([$cardId]);
-        return $stmt->fetch();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    // Función para obtener todas las cartas de un jugador en una sala
-    public function getAllPlayerCards($roomId, $playerId) {
-        return $this->getPlayerCards($roomId, $playerId, true);
+    public function assignCardsToPlayers($roomId) { 
+        return true; 
+    }
+    
+    public function playCard($roomId, $playerId, $cardId, $roundId, $attributeValue) { 
+        return true; 
+    }
+    
+    public function getPlayerCards($roomId, $playerId) { 
+        return []; 
     }
 }
 ?>
