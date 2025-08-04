@@ -1,70 +1,70 @@
 <?php
 class Player {
-    private $conn;
+    private $db;
     private $table_name = "room_players";
 
     public function __construct($db) {
-        $this->conn = $db;
+        $this->db = $db;
     }
 
     public function addPlayerToRoom($roomId, $playerName, $userId = null) {
-        // Verificar si la sala está llena
-        $currentPlayers = $this->getPlayerCountInRoom($roomId);
-        $room = new GameRoom($this->conn);
-        $roomData = $room->getRoomByCode($this->getRoomCode($roomId));
-        
-        if ($currentPlayers >= $roomData['max_players']) {
+        try {
+            // 1. Verificar si la sala está llena
+            $stmt = $this->db->prepare("
+                SELECT COUNT(*) as player_count, max_players 
+                FROM room_players rp 
+                JOIN game_rooms gr ON rp.room_id = gr.id 
+                WHERE gr.id = ?
+                GROUP BY gr.max_players
+            ");
+            $stmt->execute([$roomId]);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($result && $result['player_count'] >= $result['max_players']) {
+                return false; // Sala llena
+            }
+
+            // 2. Obtener el siguiente orden del jugador
+            $stmt = $this->db->prepare("
+                SELECT COALESCE(MAX(player_order), 0) + 1 as next_order 
+                FROM room_players 
+                WHERE room_id = ?
+            ");
+            $stmt->execute([$roomId]);
+            $nextOrder = $stmt->fetchColumn();
+
+            // 3. Insertar el jugador
+            $stmt = $this->db->prepare("
+                INSERT INTO room_players 
+                (room_id, player_name, user_id, player_order, score, created_at) 
+                VALUES (?, ?, ?, ?, 0, NOW())
+            ");
+            
+            if ($stmt->execute([$roomId, $playerName, $userId, $nextOrder])) {
+                return $this->db->lastInsertId();
+            }
+            
+            return false;
+        } catch (PDOException $e) {
+            error_log("Error en addPlayerToRoom: " . $e->getMessage());
             return false;
         }
-
-        $playerOrder = $currentPlayers + 1;
-        
-        $query = "INSERT INTO " . $this->table_name . " (room_id, player_name, user_id, player_order) VALUES (?, ?, ?, ?)";
-        $stmt = $this->conn->prepare($query);
-        
-        if ($stmt->execute([$roomId, $playerName, $userId, $playerOrder])) {
-            // Actualizar contador de jugadores en la sala
-            $this->updatePlayerCount($roomId);
-            return $this->conn->lastInsertId();
-        }
-        return false;
     }
 
     public function getPlayersInRoom($roomId) {
-        $query = "SELECT * FROM " . $this->table_name . " WHERE room_id = ? ORDER BY player_order";
-        $stmt = $this->conn->prepare($query);
-        $stmt->execute([$roomId]);
-        return $stmt->fetchAll();
-    }
-
-    public function getPlayerCountInRoom($roomId) {
-        $query = "SELECT COUNT(*) as count FROM " . $this->table_name . " WHERE room_id = ?";
-        $stmt = $this->conn->prepare($query);
-        $stmt->execute([$roomId]);
-        $result = $stmt->fetch();
-        return $result['count'];
-    }
-
-    private function updatePlayerCount($roomId) {
-        $count = $this->getPlayerCountInRoom($roomId);
-        $query = "UPDATE game_rooms SET current_players = ? WHERE id = ?";
-        $stmt = $this->conn->prepare($query);
-        $stmt->execute([$count, $roomId]);
-    }
-
-    private function getRoomCode($roomId) {
-        $query = "SELECT room_code FROM game_rooms WHERE id = ?";
-        $stmt = $this->conn->prepare($query);
-        $stmt->execute([$roomId]);
-        $result = $stmt->fetch();
-        return $result ? $result['room_code'] : null;
-    }
-
-    public function updatePlayerScore($playerId, $score) {
-        $query = "UPDATE " . $this->table_name . " SET score = score + ? WHERE id = ?";
-        $stmt = $this->conn->prepare($query);
-        return $stmt->execute([$score, $playerId]);
+        try {
+            $stmt = $this->db->prepare("
+                SELECT * FROM room_players 
+                WHERE room_id = ? 
+                ORDER BY player_order
+            ");
+            $stmt->execute([$roomId]);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("Error en getPlayersInRoom: " . $e->getMessage());
+            return [];
+        }
     }
 }
-    
+?>
 ?>

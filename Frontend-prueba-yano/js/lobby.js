@@ -286,24 +286,21 @@ async function createRoomAndStartGame() {
             })
         });
 
-        // Verificar si la respuesta es HTML (error) o JSON
         const contentType = createResponse.headers.get('content-type');
         if (!contentType || !contentType.includes('application/json')) {
             const text = await createResponse.text();
             console.error('Respuesta no-JSON del servidor:', text);
-            throw new Error('El servidor respondió con un formato inválido. Por favor, verifica tu sesión.');
+            throw new Error('El servidor respondió con un formato inválido');
         }
         
         const createData = await createResponse.json();
-        console.log('Respuesta del servidor:', createData);
-
         if (!createData.success) {
             throw new Error(createData.error || 'Error al crear la sala');
         }
         
         currentRoom = createData.room;
         
-        // 2. Añadir todos los jugadores a la sala
+        // 2. Añadir jugadores uno por uno con manejo de errores
         const addedPlayers = [];
         for (let player of gameConfig.players) {
             try {
@@ -316,8 +313,14 @@ async function createRoomAndStartGame() {
                     })
                 });
                 
-                const joinData = await joinResponse.json();
+                if (!joinResponse.ok) {
+                    console.error(`Error al añadir jugador ${player.name}: Status ${joinResponse.status}`);
+                    const errorText = await joinResponse.text();
+                    console.error('Detalle del error:', errorText);
+                    continue;
+                }
                 
+                const joinData = await joinResponse.json();
                 if (joinData.success) {
                     addedPlayers.push({
                         ...player,
@@ -325,7 +328,6 @@ async function createRoomAndStartGame() {
                         room_id: joinData.room_id
                     });
                     
-                    // Guardar el primer jugador como el jugador actual del usuario
                     if (addedPlayers.length === 1) {
                         currentPlayer = addedPlayers[0];
                     }
@@ -377,14 +379,7 @@ async function createRoomAndStartGame() {
         
     } catch (error) {
         console.error('Error detallado en createRoomAndStartGame:', error);
-        if (error.message.includes('JSON')) {
-            showAlert('Error: Tu sesión puede haber expirado. Por favor, vuelve a iniciar sesión.', 'error');
-            setTimeout(() => {
-                window.location.href = '../html/index.html';
-            }, 2000);
-        } else {
-            showAlert(error.message || 'Error al crear la sala', 'error');
-        }
+        showAlert(error.message || 'Error al crear la sala', 'error');
     } finally {
         showLoading(false);
     }
