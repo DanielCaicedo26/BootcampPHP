@@ -383,6 +383,9 @@ body {
     background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
     border-radius: 15px;
     box-shadow: 0 8px 25px rgba(76, 175, 80, 0.3);
+    width: 48%;
+    margin-top: -1660px;
+    height: 140px;
 }
 
 .start-game-btn {
