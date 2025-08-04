@@ -21,35 +21,55 @@ class Game {
 
     // Obtener mapa por ID
     public function getMapById($mapId) {
-        $stmt = $this->db->prepare("SELECT id, name, description, image_url FROM maps WHERE id = ?");
-        $stmt->execute([$mapId]);
-        return $stmt->fetch(PDO::FETCH_ASSOC);
+        try {
+            $stmt = $this->db->prepare("SELECT id, name, description, image_url FROM maps WHERE id = ?");
+            $stmt->execute([$mapId]);
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+            error_log("Error en getMapById: " . $e->getMessage());
+            return false;
+        }
     }
 
     // Obtener todas las cartas
     public function getAllCards() {
-        $stmt = $this->db->prepare("SELECT id, name, altura_mts, tecnica, fuerza, peleas_ganadas, velocidad_percent, ki, image_url FROM cards ORDER BY name");
-        $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        try {
+            $stmt = $this->db->prepare("SELECT id, name, altura_mts, tecnica, fuerza, peleas_ganadas, velocidad_percent, ki, image_url FROM cards ORDER BY name");
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+            error_log("Error en getAllCards: " . $e->getMessage());
+            return [];
+        }
     }
 
     // Obtener carta por ID
     public function getCardById($cardId) {
-        $stmt = $this->db->prepare("SELECT id, name, altura_mts, tecnica, fuerza, peleas_ganadas, velocidad_percent, ki, image_url FROM cards WHERE id = ?");
-        $stmt->execute([$cardId]);
-        return $stmt->fetch(PDO::FETCH_ASSOC);
+        try {
+            $stmt = $this->db->prepare("SELECT id, name, altura_mts, tecnica, fuerza, peleas_ganadas, velocidad_percent, ki, image_url FROM cards WHERE id = ?");
+            $stmt->execute([$cardId]);
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+            error_log("Error en getCardById: " . $e->getMessage());
+            return false;
+        }
     }
 
     // Inicializar estado del juego
     public function initializeGameState($roomId) {
-        $stmt = $this->db->prepare("
-            UPDATE game_rooms 
-            SET current_round = 1,
-                status = 'playing',
-                started_at = NOW()
-            WHERE id = ?
-        ");
-        return $stmt->execute([$roomId]);
+        try {
+            $stmt = $this->db->prepare("
+                UPDATE game_rooms 
+                SET current_round = 1,
+                    status = 'playing',
+                    started_at = NOW()
+                WHERE id = ?
+            ");
+            return $stmt->execute([$roomId]);
+        } catch (Exception $e) {
+            error_log("Error en initializeGameState: " . $e->getMessage());
+            return false;
+        }
     }
 
     // Asignar 8 cartas aleatorias a cada jugador de la sala
@@ -100,86 +120,106 @@ class Game {
 
     // Obtener cartas de un jugador
     public function getPlayerCards($roomId, $playerId) {
-        $stmt = $this->db->prepare("
-            SELECT c.id, c.name, c.altura_mts, c.tecnica, c.fuerza, 
-                   c.peleas_ganadas, c.velocidad_percent, c.ki, c.image_url
-            FROM player_cards pc
-            JOIN cards c ON pc.card_id = c.id
-            WHERE pc.room_id = ? AND pc.player_id = ? AND pc.is_used = 0
-            ORDER BY c.name
-        ");
-        $stmt->execute([$roomId, $playerId]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        try {
+            $stmt = $this->db->prepare("
+                SELECT c.id, c.name, c.altura_mts, c.tecnica, c.fuerza, 
+                       c.peleas_ganadas, c.velocidad_percent, c.ki, c.image_url
+                FROM player_cards pc
+                JOIN cards c ON pc.card_id = c.id
+                WHERE pc.room_id = ? AND pc.player_id = ? AND pc.is_used = 0
+                ORDER BY c.name
+            ");
+            $stmt->execute([$roomId, $playerId]);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+            error_log("Error en getPlayerCards: " . $e->getMessage());
+            return [];
+        }
     }
 
     // Obtener estado completo del juego
     public function getGameState($roomId) {
-        // Obtener información de la sala
-        $stmt = $this->db->prepare("
-            SELECT gr.*, m.name as map_name, m.image_url as map_image
-            FROM game_rooms gr
-            LEFT JOIN maps m ON gr.selected_map_id = m.id
-            WHERE gr.id = ?
-        ");
-        $stmt->execute([$roomId]);
-        $room = $stmt->fetch(PDO::FETCH_ASSOC);
-        
-        // Obtener jugadores con sus puntajes
-        $stmt = $this->db->prepare("
-            SELECT id, player_name, score, player_order
-            FROM room_players 
-            WHERE room_id = ? 
-            ORDER BY player_order
-        ");
-        $stmt->execute([$roomId]);
-        $players = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
-        // Obtener la ronda actual si existe
-        $currentRound = null;
-        if ($room['current_round'] > 0) {
+        try {
+            // Obtener información de la sala
             $stmt = $this->db->prepare("
-                SELECT * FROM game_rounds 
-                WHERE room_id = ? AND round_number = ?
+                SELECT gr.*, m.name as map_name, m.image_url as map_image
+                FROM game_rooms gr
+                LEFT JOIN maps m ON gr.selected_map_id = m.id
+                WHERE gr.id = ?
             ");
-            $stmt->execute([$roomId, $room['current_round']]);
-            $currentRound = $stmt->fetch(PDO::FETCH_ASSOC);
+            $stmt->execute([$roomId]);
+            $room = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            // Obtener jugadores con sus puntajes
+            $stmt = $this->db->prepare("
+                SELECT id, player_name, score, player_order
+                FROM room_players 
+                WHERE room_id = ? 
+                ORDER BY player_order
+            ");
+            $stmt->execute([$roomId]);
+            $players = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Obtener la ronda actual si existe
+            $currentRound = null;
+            if ($room['current_round'] > 0) {
+                $stmt = $this->db->prepare("
+                    SELECT * FROM game_rounds 
+                    WHERE room_id = ? AND round_number = ?
+                ");
+                $stmt->execute([$roomId, $room['current_round']]);
+                $currentRound = $stmt->fetch(PDO::FETCH_ASSOC);
+            }
+            
+            return [
+                'room' => $room,
+                'players' => $players,
+                'current_round' => $currentRound,
+                'current_turn' => $this->getCurrentTurn($roomId)
+            ];
+        } catch (Exception $e) {
+            error_log("Error en getGameState: " . $e->getMessage());
+            return [
+                'room' => null,
+                'players' => [],
+                'current_round' => null,
+                'current_turn' => null
+            ];
         }
-        
-        return [
-            'room' => $room,
-            'players' => $players,
-            'current_round' => $currentRound,
-            'current_turn' => $this->getCurrentTurn($roomId)
-        ];
     }
 
     // Obtener turno actual (jugador que debe elegir atributo)
     private function getCurrentTurn($roomId) {
-        $stmt = $this->db->prepare("
-            SELECT current_round, current_turn FROM game_rooms WHERE id = ?
-        ");
-        $stmt->execute([$roomId]);
-        $room = $stmt->fetch(PDO::FETCH_ASSOC);
-        
-        if (!$room) return null;
-        
-        // El turno rota entre jugadores por ronda
-        $stmt = $this->db->prepare("
-            SELECT COUNT(*) as player_count FROM room_players WHERE room_id = ?
-        ");
-        $stmt->execute([$roomId]);
-        $playerCount = $stmt->fetchColumn();
-        
-        $currentTurnIndex = ($room['current_round'] - 1) % $playerCount;
-        
-        $stmt = $this->db->prepare("
-            SELECT id, player_name FROM room_players 
-            WHERE room_id = ? 
-            ORDER BY player_order 
-            LIMIT 1 OFFSET ?
-        ");
-        $stmt->execute([$roomId, $currentTurnIndex]);
-        return $stmt->fetch(PDO::FETCH_ASSOC);
+        try {
+            $stmt = $this->db->prepare("
+                SELECT current_round, current_turn FROM game_rooms WHERE id = ?
+            ");
+            $stmt->execute([$roomId]);
+            $room = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$room) return null;
+            
+            // El turno rota entre jugadores por ronda
+            $stmt = $this->db->prepare("
+                SELECT COUNT(*) as player_count FROM room_players WHERE room_id = ?
+            ");
+            $stmt->execute([$roomId]);
+            $playerCount = $stmt->fetchColumn();
+            
+            $currentTurnIndex = ($room['current_round'] - 1) % $playerCount;
+            
+            $stmt = $this->db->prepare("
+                SELECT id, player_name FROM room_players 
+                WHERE room_id = ? 
+                ORDER BY player_order 
+                LIMIT 1 OFFSET ?
+            ");
+            $stmt->execute([$roomId, $currentTurnIndex]);
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+            error_log("Error en getCurrentTurn: " . $e->getMessage());
+            return null;
+        }
     }
 
     // Iniciar nueva ronda con atributo aleatorio
@@ -228,7 +268,7 @@ class Game {
             $attributes = ['altura_mts', 'tecnica', 'fuerza', 'peleas_ganadas', 'velocidad_percent', 'ki'];
             $selectedAttribute = $attributes[array_rand($attributes)];
             
-            // Crear nueva ronda
+            // Crear nueva ronda - CORREGIDO: insertar el nombre del atributo, no su índice
             $stmt = $this->db->prepare("
                 INSERT INTO game_rounds (room_id, round_number, selected_attribute)
                 VALUES (?, ?, ?)
@@ -248,7 +288,7 @@ class Game {
         } catch (Exception $e) {
             $this->db->rollback();
             error_log("Error iniciando ronda: " . $e->getMessage());
-            return ['error' => 'Error al iniciar la ronda'];
+            return ['error' => 'Error al iniciar la ronda: ' . $e->getMessage()];
         }
     }
 
@@ -331,103 +371,118 @@ class Game {
         } catch (Exception $e) {
             $this->db->rollback();
             error_log("Error jugando carta: " . $e->getMessage());
-            return ['error' => 'Error al jugar la carta'];
+            return ['error' => 'Error al jugar la carta: ' . $e->getMessage()];
         }
     }
 
     // Verificar si la ronda está completa y calcular ganador
     private function checkRoundCompletion($roomId) {
-        // Obtener número total de jugadores
-        $stmt = $this->db->prepare("SELECT COUNT(*) FROM room_players WHERE room_id = ?");
-        $stmt->execute([$roomId]);
-        $totalPlayers = $stmt->fetchColumn();
-        
-        // Obtener ronda actual
-        $stmt = $this->db->prepare("SELECT current_round FROM game_rooms WHERE id = ?");
-        $stmt->execute([$roomId]);
-        $currentRound = $stmt->fetchColumn();
-        
-        // Contar cartas jugadas en la ronda actual
-        $stmt = $this->db->prepare("
-            SELECT COUNT(*) FROM round_cards rc
-            JOIN game_rounds r ON rc.round_id = r.id
-            WHERE r.room_id = ? AND r.round_number = ?
-        ");
-        $stmt->execute([$roomId, $currentRound]);
-        $cardsPlayed = $stmt->fetchColumn();
-        
-        if ($cardsPlayed < $totalPlayers) {
-            return null; // Ronda aún no completa
-        }
-        
-        // Encontrar el ganador (mayor valor de atributo)
-        $stmt = $this->db->prepare("
-            SELECT rc.player_id, rc.attribute_value, rp.player_name, c.name as card_name
-            FROM round_cards rc
-            JOIN game_rounds r ON rc.round_id = r.id
-            JOIN room_players rp ON rc.player_id = rp.id
-            JOIN cards c ON rc.card_id = c.id
-            WHERE r.room_id = ? AND r.round_number = ?
-            ORDER BY rc.attribute_value DESC
-            LIMIT 1
-        ");
-        $stmt->execute([$roomId, $currentRound]);
-        $winner = $stmt->fetch(PDO::FETCH_ASSOC);
-        
-        if ($winner) {
-            // Actualizar puntaje del ganador
-            $stmt = $this->db->prepare("
-                UPDATE room_players SET score = score + 1 WHERE id = ?
-            ");
-            $stmt->execute([$winner['player_id']]);
+        try {
+            // Obtener número total de jugadores
+            $stmt = $this->db->prepare("SELECT COUNT(*) FROM room_players WHERE room_id = ?");
+            $stmt->execute([$roomId]);
+            $totalPlayers = $stmt->fetchColumn();
             
-            // Marcar ganador en la ronda
-            $stmt = $this->db->prepare("
-                UPDATE game_rounds SET winner_player_id = ? 
-                WHERE room_id = ? AND round_number = ?
-            ");
-            $stmt->execute([$winner['player_id'], $roomId, $currentRound]);
+            // Obtener ronda actual
+            $stmt = $this->db->prepare("SELECT current_round FROM game_rooms WHERE id = ?");
+            $stmt->execute([$roomId]);
+            $currentRound = $stmt->fetchColumn();
             
-            // Avanzar a la siguiente ronda o terminar juego
-            if ($currentRound < 8) {
-                $stmt = $this->db->prepare("
-                    UPDATE game_rooms SET current_round = current_round + 1 
-                    WHERE id = ?
-                ");
-                $stmt->execute([$roomId]);
-            } else {
-                // Juego terminado
-                $stmt = $this->db->prepare("
-                    UPDATE game_rooms SET status = 'finished' WHERE id = ?
-                ");
-                $stmt->execute([$roomId]);
+            // Contar cartas jugadas en la ronda actual
+            $stmt = $this->db->prepare("
+                SELECT COUNT(*) FROM round_cards rc
+                JOIN game_rounds r ON rc.round_id = r.id
+                WHERE r.room_id = ? AND r.round_number = ?
+            ");
+            $stmt->execute([$roomId, $currentRound]);
+            $cardsPlayed = $stmt->fetchColumn();
+            
+            if ($cardsPlayed < $totalPlayers) {
+                return null; // Ronda aún no completa
             }
+            
+            // Encontrar el ganador (mayor valor de atributo)
+            $stmt = $this->db->prepare("
+                SELECT rc.player_id, rc.attribute_value, rp.player_name, c.name as card_name
+                FROM round_cards rc
+                JOIN game_rounds r ON rc.round_id = r.id
+                JOIN room_players rp ON rc.player_id = rp.id
+                JOIN cards c ON rc.card_id = c.id
+                WHERE r.room_id = ? AND r.round_number = ?
+                ORDER BY rc.attribute_value DESC
+                LIMIT 1
+            ");
+            $stmt->execute([$roomId, $currentRound]);
+            $winner = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($winner) {
+                // Actualizar puntaje del ganador
+                $stmt = $this->db->prepare("
+                    UPDATE room_players SET score = score + 1 WHERE id = ?
+                ");
+                $stmt->execute([$winner['player_id']]);
+                
+                // Marcar ganador en la ronda
+                $stmt = $this->db->prepare("
+                    UPDATE game_rounds SET winner_player_id = ? 
+                    WHERE room_id = ? AND round_number = ?
+                ");
+                $stmt->execute([$winner['player_id'], $roomId, $currentRound]);
+                
+                // Avanzar a la siguiente ronda o terminar juego
+                if ($currentRound < 8) {
+                    $stmt = $this->db->prepare("
+                        UPDATE game_rooms SET current_round = current_round + 1 
+                        WHERE id = ?
+                    ");
+                    $stmt->execute([$roomId]);
+                } else {
+                    // Juego terminado
+                    $stmt = $this->db->prepare("
+                        UPDATE game_rooms SET status = 'finished' WHERE id = ?
+                    ");
+                    $stmt->execute([$roomId]);
+                }
+            }
+            
+            return $winner;
+        } catch (Exception $e) {
+            error_log("Error en checkRoundCompletion: " . $e->getMessage());
+            return null;
         }
-        
-        return $winner;
     }
 
     // Obtener resultado de la ronda actual
     public function getRoundResult($roomId, $roundNumber) {
-        $stmt = $this->db->prepare("
-            SELECT rc.player_id, rc.attribute_value, rp.player_name, c.name as card_name,
-                   r.selected_attribute, r.winner_player_id
-            FROM round_cards rc
-            JOIN game_rounds r ON rc.round_id = r.id
-            JOIN room_players rp ON rc.player_id = rp.id
-            JOIN cards c ON rc.card_id = c.id
-            WHERE r.room_id = ? AND r.round_number = ?
-            ORDER BY rc.attribute_value DESC
-        ");
-        $stmt->execute([$roomId, $roundNumber]);
-        $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
-        return [
-            'cards_played' => $results,
-            'winner' => $results[0] ?? null,
-            'attribute' => $results[0]['selected_attribute'] ?? null,
-            'attribute_name' => $this->getAttributeName($results[0]['selected_attribute'] ?? '')
-        ];
+        try {
+            $stmt = $this->db->prepare("
+                SELECT rc.player_id, rc.attribute_value, rp.player_name, c.name as card_name,
+                       r.selected_attribute, r.winner_player_id
+                FROM round_cards rc
+                JOIN game_rounds r ON rc.round_id = r.id
+                JOIN room_players rp ON rc.player_id = rp.id
+                JOIN cards c ON rc.card_id = c.id
+                WHERE r.room_id = ? AND r.round_number = ?
+                ORDER BY rc.attribute_value DESC
+            ");
+            $stmt->execute([$roomId, $roundNumber]);
+            $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            return [
+                'cards_played' => $results,
+                'winner' => $results[0] ?? null,
+                'attribute' => $results[0]['selected_attribute'] ?? null,
+                'attribute_name' => $this->getAttributeName($results[0]['selected_attribute'] ?? '')
+            ];
+        } catch (Exception $e) {
+            error_log("Error en getRoundResult: " . $e->getMessage());
+            return [
+                'cards_played' => [],
+                'winner' => null,
+                'attribute' => null,
+                'attribute_name' => ''
+            ];
+        }
     }
 
     // Obtener nombre legible del atributo
@@ -445,27 +500,40 @@ class Game {
 
     // Obtener resultado final del juego
     public function getFinalResults($roomId) {
-        $stmt = $this->db->prepare("
-            SELECT player_name, score 
-            FROM room_players 
-            WHERE room_id = ? 
-            ORDER BY score DESC, player_order ASC
-        ");
-        $stmt->execute([$roomId]);
-        $players = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
-        return [
-            'final_standings' => $players,
-            'winner' => $players[0] ?? null
-        ];
+        try {
+            $stmt = $this->db->prepare("
+                SELECT player_name, score 
+                FROM room_players 
+                WHERE room_id = ? 
+                ORDER BY score DESC, player_order ASC
+            ");
+            $stmt->execute([$roomId]);
+            $players = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            return [
+                'final_standings' => $players,
+                'winner' => $players[0] ?? null
+            ];
+        } catch (Exception $e) {
+            error_log("Error en getFinalResults: " . $e->getMessage());
+            return [
+                'final_standings' => [],
+                'winner' => null
+            ];
+        }
     }
 
     // Verificar si el juego ha terminado
     public function isGameFinished($roomId) {
-        $stmt = $this->db->prepare("SELECT status, current_round FROM game_rooms WHERE id = ?");
-        $stmt->execute([$roomId]);
-        $room = $stmt->fetch(PDO::FETCH_ASSOC);
-        
-        return $room['status'] === 'finished' || $room['current_round'] > 8;
+        try {
+            $stmt = $this->db->prepare("SELECT status, current_round FROM game_rooms WHERE id = ?");
+            $stmt->execute([$roomId]);
+            $room = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            return $room['status'] === 'finished' || $room['current_round'] > 8;
+        } catch (Exception $e) {
+            error_log("Error en isGameFinished: " . $e->getMessage());
+            return false;
+        }
     }
 }

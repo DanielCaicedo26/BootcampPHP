@@ -166,13 +166,6 @@ async function loadMaps() {
 
         renderMaps(maps);
 
-        // Actualizar filtro de mapas
-        const mapFilter = document.getElementById('mapFilter');
-        if (mapFilter) {
-            mapFilter.innerHTML = '<option value="">Todos los mapas</option>' +
-                maps.map(map => `<option value="${map.id}">${map.name}</option>`).join('');
-        }
-
     } catch (error) {
         console.error('Error en loadMaps:', error);
         showAlert('Error al cargar los mapas: ' + error.message, 'error');
@@ -263,18 +256,19 @@ function selectMap(mapId) {
             showAlert(`Mapa seleccionado: ${selectedMap.name}`, 'success');
         }
     } catch (error) {
-      
         showAlert('Error al seleccionar el mapa', 'error');
     }
 }
 
 // ==========================================
-// FUNCIONES DE SALA Y JUGADORES
+// FUNCIONES DE SALA Y JUGADORES - CORREGIDAS
 // ==========================================
 
 async function createRoomAndStartGame() {
     try {
         showLoading(true);
+        
+        console.log('Iniciando creación de sala...');
         
         // 1. Crear sala
         const createResponse = await fetch(`${API_ROOMS}?action=create`, {
@@ -286,41 +280,50 @@ async function createRoomAndStartGame() {
             })
         });
 
-        const contentType = createResponse.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
-            const text = await createResponse.text();
-            console.error('Respuesta no-JSON del servidor:', text);
-            throw new Error('El servidor respondió con un formato inválido');
+        if (!createResponse.ok) {
+            throw new Error(`Error HTTP al crear sala: ${createResponse.status}`);
         }
         
         const createData = await createResponse.json();
+        console.log('Respuesta de creación de sala:', createData);
+        
         if (!createData.success) {
             throw new Error(createData.error || 'Error al crear la sala');
         }
         
         currentRoom = createData.room;
+        console.log('Sala creada:', currentRoom);
         
-        // 2. Añadir jugadores uno por uno con manejo de errores
+        // 2. Añadir jugadores uno por uno con mejor manejo de errores
         const addedPlayers = [];
-        for (let player of gameConfig.players) {
+        let failedCount = 0;
+        
+        for (let i = 0; i < gameConfig.players.length; i++) {
+            const player = gameConfig.players[i];
             try {
+                console.log(`Añadiendo jugador ${i + 1}: ${player.name}`);
+                
                 const joinResponse = await fetch(`${API_ROOMS}?action=join`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        room_code: currentRoom.room_code,
+                        room_id: currentRoom.id,
                         player_name: player.name
                     })
                 });
+
                 
                 if (!joinResponse.ok) {
-                    console.error(`Error al añadir jugador ${player.name}: Status ${joinResponse.status}`);
                     const errorText = await joinResponse.text();
+                    console.error(`Error HTTP al añadir jugador ${player.name}: Status ${joinResponse.status}`);
                     console.error('Detalle del error:', errorText);
+                    failedCount++;
                     continue;
                 }
                 
                 const joinData = await joinResponse.json();
+                console.log(`Respuesta para jugador ${player.name}:`, joinData);
+                
                 if (joinData.success) {
                     addedPlayers.push({
                         ...player,
@@ -328,38 +331,54 @@ async function createRoomAndStartGame() {
                         room_id: joinData.room_id
                     });
                     
+                    // El primer jugador añadido será el jugador principal
                     if (addedPlayers.length === 1) {
                         currentPlayer = addedPlayers[0];
                     }
+                } else {
+                    console.error(`Error al añadir jugador ${player.name}:`, joinData.error);
+                    failedCount++;
                 }
             } catch (error) {
-                console.error(`Error añadiendo jugador ${player.name}:`, error);
+                console.error(`Excepción añadiendo jugador ${player.name}:`, error);
+                failedCount++;
             }
         }
+        
+        console.log(`Jugadores añadidos: ${addedPlayers.length}, Fallidos: ${failedCount}`);
         
         if (addedPlayers.length === 0) {
             throw new Error('No se pudo añadir ningún jugador a la sala');
         }
         
+        // Actualizar configuración con jugadores añadidos exitosamente
         gameConfig.players = addedPlayers;
         
-        // 3. Establecer el mapa seleccionado directamente
-        const setMapResponse = await fetch(`${API_ROOMS}?action=set_map`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                room_id: currentRoom.id,
-                map_id: selectedMap.id
-            })
-        });
-        
-        const setMapData = await setMapResponse.json();
-        
-        if (!setMapData.success) {
-            throw new Error('Error al establecer el mapa');
+        // 3. Establecer el mapa seleccionado
+        if (selectedMap && selectedMap.id) {
+            console.log('Estableciendo mapa:', selectedMap.name);
+            
+            const setMapResponse = await fetch(`${API_ROOMS}?action=set_map`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    room_id: currentRoom.id,
+                    map_id: selectedMap.id
+                })
+            });
+            
+            const setMapData = await setMapResponse.json();
+            console.log('Respuesta de establecer mapa:', setMapData);
+            
+            if (!setMapData.success) {
+                console.error('Error estableciendo mapa:', setMapData.error);
+                // Continuar sin mapa si hay error
+            }
         }
         
         // 4. Iniciar el juego y asignar cartas
+        console.log('Iniciando juego...');
+        
         const startResponse = await fetch(`${API_ROOMS}?action=start_game`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -369,9 +388,10 @@ async function createRoomAndStartGame() {
         });
         
         const startData = await startResponse.json();
+        console.log('Respuesta de iniciar juego:', startData);
         
         if (startData.success) {
-            showAlert(`¡Sala creada exitosamente! Código: ${currentRoom.room_code}`, 'success');
+            showAlert(`¡Sala creada exitosamente! Jugadores añadidos: ${addedPlayers.length}`, 'success');
             showGameStartModal();
         } else {
             throw new Error(startData.error || 'Error al iniciar el juego');
@@ -393,10 +413,15 @@ function startLocalGame() {
     // Actualizar nombres de jugadores desde los inputs
     for (let i = 1; i <= gameConfig.playerCount; i++) {
         const input = document.getElementById(`player${i}`);
-        if (input) {
-            gameConfig.players[i-1].name = input.value.trim() || `Jugador ${i}`;
+        if (input && input.value.trim()) {
+            const player = gameConfig.players.find(p => p.id === i);
+            if (player) {
+                player.name = input.value.trim();
+            }
         }
     }
+    
+    console.log('Configuración del juego:', gameConfig);
     
     // Crear sala y empezar proceso
     createRoomAndStartGame();
@@ -406,7 +431,6 @@ function validateGameConfig() {
     // Verificar que se haya seleccionado un mapa
     if (!selectedMap || !gameConfig.selectedMapId) {
         showAlert('Por favor selecciona un mapa para jugar', 'error');
-        document.getElementById('mapsSection').scrollIntoView();
         return false;
     }
     
@@ -425,7 +449,7 @@ function validateGameConfig() {
 
 function showGameStartModal() {
     // Llenar resumen del juego
-    document.getElementById('summaryPlayers').textContent = gameConfig.playerCount;
+    document.getElementById('summaryPlayers').textContent = gameConfig.players.length;
     document.getElementById('summaryMap').textContent = selectedMap ? selectedMap.name : 'No seleccionado';
     
     // Llenar lista de jugadores
@@ -466,7 +490,9 @@ async function confirmStartGame() {
         
         sessionStorage.setItem('gameConfig', JSON.stringify(gameData));
         
-        // Redirigir usando la ruta correcta
+        console.log('Datos del juego guardados:', gameData);
+        
+        // Redirigir al juego
         window.location.href = 'game.html?roomId=' + currentRoom.id + '&playerId=' + currentPlayer.db_id;
         
     } catch (error) {
@@ -478,14 +504,13 @@ async function confirmStartGame() {
 }
 
 // ==========================================
-// FUNCIONES DE CARTAS - ACTUALIZADO PARA USAR DB
+// FUNCIONES DE CARTAS
 // ==========================================
 
 async function loadCards() {
     try {
         showLoading(true);
         
-        // Cargar cartas desde la base de datos
         const response = await fetch(`${API_ROOMS}?action=cards`);
         
         if (!response.ok) {
@@ -504,8 +529,6 @@ async function loadCards() {
     } catch (error) {
         console.error('Error cargando cartas:', error);
         showAlert('Error al cargar las cartas: ' + error.message, 'error');
-        
-        // En caso de error, mostrar estado vacío
         renderCards([]);
     } finally {
         showLoading(false);
@@ -574,7 +597,6 @@ function showCardDetails(cardId) {
     document.getElementById('cardTechnique').textContent = card.tecnica;
     document.getElementById('cardKi').textContent = card.ki;
     document.getElementById('cardWins').textContent = card.peleas_ganadas;
-    //document.getElementById('cardDescription').textContent = `Personaje del universo Dragon Ball con ${card.fuerza} puntos de fuerza`;
     
     // Actualizar imagen si existe
     const cardImage = document.getElementById('cardImage');

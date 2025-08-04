@@ -40,44 +40,60 @@ switch ($method) {
                 break;
                 
             case 'join':
-                // Añadir logging para debug
-                error_log("Datos recibidos en join: " . print_r($input, true));
-    
-                $roomCode = sanitizeInput($input['room_code'] ?? '');
-                $playerName = sanitizeInput($input['player_name'] ?? '');
-    
-                // Verificar datos
-                if (empty($roomCode) || empty($playerName)) {
-                    jsonResponse([
-                        'error' => 'Código de sala y nombre de jugador son requeridos',
-                        'received' => [
-                            'room_code' => $roomCode,
-                            'player_name' => $playerName
-                        ]
-                    ], 400);
-                }
-    
-                // Obtener sala
-                $room = $gameRoom->getRoomByCode($roomCode);
-                if (!$room) {
-                    jsonResponse(['error' => 'Sala no encontrada', 'code' => $roomCode], 404);
-                }
-    
-                // Verificar estado de sala
-                if ($room['status'] !== 'waiting') {
-                    jsonResponse(['error' => 'La sala no está disponible', 'status' => $room['status']], 400);
-                }
-    
-                // Añadir jugador
-                $playerId = $player->addPlayerToRoom($room['id'], $playerName);
-                if ($playerId) {
-                    jsonResponse([
-                        'success' => true,
-                        'player_id' => $playerId,
-                        'room_id' => $room['id']
-                    ]);
-                } else {
-                    jsonResponse(['error' => 'Error al añadir jugador'], 500);
+                try {
+                   
+                  $roomId = intval($input['room_id'] ?? 0);
+                    $playerName = sanitizeInput($input['player_name'] ?? '');
+
+                    if (!$roomId || empty($playerName)) {
+                        jsonResponse([
+                            'error' => 'ID de sala y nombre de jugador son requeridos',
+                            'received' => [
+                                'room_id' => $roomId,
+                                'player_name' => $playerName
+                            ]
+                        ], 400);
+                    }
+
+                    $room = $gameRoom->getRoomById($roomId);
+                    if (!$room) {
+                        jsonResponse(['error' => 'Sala no encontrada', 'room_id' => $roomId], 404);
+                    }
+
+        
+                   
+        
+                    // Verificar estado de sala
+                    if ($room['status'] !== 'waiting') {
+                        jsonResponse(['error' => 'La sala no está disponible', 'status' => $room['status']], 400);
+                    }
+                    
+                    // Verificar si la sala está llena
+                    if ($gameRoom->isRoomFull($room['id'])) {
+                        jsonResponse(['error' => 'La sala está llena'], 400);
+                    }
+        
+                    // Añadir jugador
+                    $playerId = $player->addPlayerToRoom($room['id'], $playerName);
+                    if ($playerId) {
+                        jsonResponse([
+                            'success' => true,
+                            'player_id' => $playerId,
+                            'room_id' => $room['id']
+                        ]);
+                    } else {
+                        $jsonLastError = json_last_error_msg();
+                        jsonResponse([
+                            'error' => 'Error al añadir jugador',
+                            'player_name' => $playerName,
+                            'room_id' => $room['id'],
+                            'details' => $jsonLastError
+                        ], 500);
+
+                    }
+                } catch (Exception $e) {
+                    error_log("Error en join: " . $e->getMessage());
+                    jsonResponse(['error' => 'Error al añadir jugador: ' . $e->getMessage()], 500);
                 }
                 break;
                 
@@ -98,36 +114,45 @@ switch ($method) {
                 break;
                 
             case 'start_game':
-                $roomId = intval($input['room_id'] ?? 0);
-                
-                if (!$roomId) {
-                    jsonResponse(['error' => 'ID de sala requerido'], 400);
+                try {
+                    $roomId = intval($input['room_id'] ?? 0);
+                    
+                    if (!$roomId) {
+                        jsonResponse(['error' => 'ID de sala requerido'], 400);
+                    }
+                    
+                    $room = $gameRoom->getRoomById($roomId);
+                    if (!$room) {
+                        jsonResponse(['error' => 'Sala no encontrada'], 404);
+                    }
+                    
+                    if (!$room['selected_map_id']) {
+                        jsonResponse(['error' => 'La sala debe tener un mapa seleccionado'], 400);
+                    }
+                    
+                    // Inicializar estado del juego
+                    if (!$game->initializeGameState($roomId)) {
+                        jsonResponse(['error' => 'Error al inicializar el juego'], 500);
+                    }
+                    
+                    // Asignar cartas a jugadores
+                    $cardsAssigned = $game->assignCardsToPlayers($roomId);
+                    if (!$cardsAssigned) {
+                        jsonResponse(['error' => 'Error al asignar cartas'], 500);
+                    }
+                    
+                    // Obtener estado inicial del juego
+                    $gameState = $game->getGameState($roomId);
+                    
+                    jsonResponse([
+                        'success' => true,
+                        'game_state' => $gameState,
+                        'selected_map' => $game->getMapById($room['selected_map_id'])
+                    ]);
+                } catch (Exception $e) {
+                    error_log("Error en start_game: " . $e->getMessage());
+                    jsonResponse(['error' => 'Error al iniciar juego: ' . $e->getMessage()], 500);
                 }
-                
-                $room = $gameRoom->getRoomById($roomId);
-                if (!$room || !$room['selected_map_id']) {
-                    jsonResponse(['error' => 'La sala debe tener un mapa seleccionado'], 400);
-                }
-                
-                // Inicializar estado del juego
-                if (!$game->initializeGameState($roomId)) {
-                    jsonResponse(['error' => 'Error al inicializar el juego'], 500);
-                }
-                
-                // Asignar cartas a jugadores
-                $cardsAssigned = $game->assignCardsToPlayers($roomId);
-                if (!$cardsAssigned) {
-                    jsonResponse(['error' => 'Error al asignar cartas'], 500);
-                }
-                
-                // Obtener estado inicial del juego
-                $gameState = $game->getGameState($roomId);
-                
-                jsonResponse([
-                    'success' => true,
-                    'game_state' => $gameState,
-                    'selected_map' => $game->getMapById($room['selected_map_id'])
-                ]);
                 break;
                 
             case 'start_round':
@@ -168,7 +193,7 @@ switch ($method) {
                     jsonResponse(['error' => 'Código de sala requerido'], 400);
                 }
                 
-                $room = $gameRoom->getRoomByCode($roomCode);
+                
                 if (!$room) {
                     jsonResponse(['error' => 'Sala no encontrada'], 404);
                 }
