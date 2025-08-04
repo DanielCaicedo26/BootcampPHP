@@ -20,6 +20,12 @@ body {
     background-size: cover;
 }
 
+.bola{
+    width: 20%;
+    background: url(../Img/bola.png);
+    position: absolute;
+}
+
 /* Contenedor principal */
 .auth-container {
     background: rgba(255, 255, 255, 0.95);
