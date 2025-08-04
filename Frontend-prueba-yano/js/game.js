@@ -10,9 +10,12 @@ let gameState = {
     selectedMap: null,
     playerCards: [],
     currentAttribute: null,
-    isMyTurn: false,
+    currentTurn: 1,
+    currentPlayerId: null,
+    currentPlayerName: '',
     roundInProgress: false,
-    gameFinished: false
+    gameFinished: false,
+    totalPlayers: 0
 };
 
 // Inicializar juego desde datos del lobby
@@ -46,8 +49,6 @@ async function initializeGame() {
     try {
         // Cargar estado inicial del juego
         await fetchGameState();
-        // Cargar cartas del jugador
-        await fetchPlayerCards();
         // Iniciar actualizaciones periódicas
         startGameLoop();
         
@@ -70,8 +71,17 @@ async function fetchGameState() {
         
         if (data.room) {
             gameState.currentRound = data.room.current_round;
+            gameState.currentTurn = data.room.current_turn;
             gameState.players = data.players;
+            gameState.totalPlayers = data.players.length;
             gameState.gameFinished = data.room.status === 'finished';
+            
+            // Determinar el jugador actual del turno
+            const currentPlayer = data.players.find(p => p.player_order === gameState.currentTurn);
+            if (currentPlayer) {
+                gameState.currentPlayerId = currentPlayer.id;
+                gameState.currentPlayerName = currentPlayer.player_name;
+            }
             
             updateGameUI(data);
         }
@@ -80,10 +90,10 @@ async function fetchGameState() {
     }
 }
 
-// Obtener cartas del jugador
-async function fetchPlayerCards() {
+// Obtener cartas del jugador actual del turno
+async function fetchCurrentPlayerCards() {
     try {
-        const response = await fetch(`${API_ROOMS}?action=player_cards&room_id=${gameState.roomId}&player_id=${gameState.playerId}`);
+        const response = await fetch(`${API_ROOMS}?action=player_cards&room_id=${gameState.roomId}&player_id=${gameState.currentPlayerId}`);
         const data = await response.json();
         
         if (data.cards) {
@@ -114,6 +124,10 @@ async function startNewRound() {
         if (data.success) {
             gameState.currentAttribute = data.selected_attribute;
             gameState.roundInProgress = true;
+            gameState.currentTurn = data.current_turn;
+            
+            // Actualizar estado del juego después de obtener la información de la ronda
+            await fetchGameState();
             
             // Mostrar ruleta de atributos
             showAttributeRoulette(data.selected_attribute, data.attribute_name);
@@ -208,21 +222,71 @@ function showAttributeRoulette(selectedAttribute, attributeName) {
     // Función global para cerrar ruleta
     window.closeRoulette = function() {
         modal.remove();
-        showAlert(`¡Ronda ${gameState.currentRound}! Selecciona tu carta con el mejor ${attributeName}`, 'info');
-        enableCardSelection();
+        // Cargar cartas del jugador actual y preparar turno
+        prepareTurn();
     };
 }
 
-// Habilitar selección de cartas
+// Preparar turno del jugador actual
+async function prepareTurn() {
+    await fetchGameState();
+    await fetchCurrentPlayerCards();
+    
+    // Mostrar de quién es el turno
+    if (gameState.currentPlayerId) {
+        showAlert(`Turno de: ${gameState.currentPlayerName}`, 'info');
+        
+        // Solo habilitar cartas si es el turno del jugador correcto
+        enableCardSelection();
+        
+        // Actualizar información en pantalla
+        updateTurnInfo();
+    }
+}
+
+// Actualizar información del turno en pantalla
+function updateTurnInfo() {
+    document.getElementById('currentTurn').textContent = `Turno de: ${gameState.currentPlayerName}`;
+    
+    // Actualizar área de estado del juego
+    const roundStatus = document.getElementById('roundStatus');
+    if (roundStatus) {
+        roundStatus.innerHTML = `
+            <p><strong>Es el turno de:</strong> ${gameState.currentPlayerName}</p>
+            <p><strong>Atributo:</strong> ${getAttributeName(gameState.currentAttribute)}</p>
+            <p><strong>Jugadores restantes:</strong> ${getPlayersLeftInRound()}</p>
+        `;
+    }
+}
+
+// Obtener cuántos jugadores faltan por jugar en la ronda
+function getPlayersLeftInRound() {
+    // Esta información debe venir del backend, por ahora estimamos
+    return `${gameState.totalPlayers - (gameState.currentTurn - 1)} de ${gameState.totalPlayers}`;
+}
+
+// Habilitar selección de cartas solo para el jugador del turno actual
 function enableCardSelection() {
     const cards = document.querySelectorAll('.card');
     cards.forEach(card => {
         card.style.cursor = 'pointer';
         card.style.opacity = '1';
+        card.classList.add('selectable');
         card.onclick = function() {
             const cardId = this.dataset.cardId;
             playCard(cardId);
         };
+    });
+}
+
+// Deshabilitar selección de cartas
+function disableCardSelection() {
+    const cards = document.querySelectorAll('.card');
+    cards.forEach(card => {
+        card.style.cursor = 'not-allowed';
+        card.style.opacity = '0.5';
+        card.classList.remove('selectable');
+        card.onclick = null;
     });
 }
 
@@ -234,20 +298,15 @@ async function playCard(cardId) {
     }
     
     try {
-        // Deshabilitar todas las cartas
-        const cards = document.querySelectorAll('.card');
-        cards.forEach(card => {
-            card.style.cursor = 'not-allowed';
-            card.style.opacity = '0.5';
-            card.onclick = null;
-        });
+        // Deshabilitar todas las cartas inmediatamente
+        disableCardSelection();
         
         const response = await fetch(`${API_ROOMS}?action=play_card`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 room_id: gameState.roomId,
-                player_id: gameState.playerId,
+                player_id: gameState.currentPlayerId,
                 card_id: cardId
             })
         });
@@ -257,18 +316,28 @@ async function playCard(cardId) {
         if (data.success) {
             // Remover carta jugada de la mano
             gameState.playerCards = gameState.playerCards.filter(card => card.id != cardId);
-            renderPlayerCards();
             
-            showAlert(`¡Carta jugada! Valor: ${data.attribute_value}`, 'success');
+            showAlert(`¡${gameState.currentPlayerName} jugó su carta! Valor: ${data.attribute_value}`, 'success');
             
             // Mostrar carta en el área de juego
-            addCardToPlayArea(cardId, data.attribute_value);
+            addCardToPlayArea(cardId, data.attribute_value, gameState.currentPlayerName);
             
             if (data.round_complete && data.round_result) {
                 // Mostrar resultado de la ronda
                 setTimeout(() => showRoundResult(data.round_result), 2000);
             } else {
-                showAlert('Esperando a que otros jugadores jueguen sus cartas...', 'info');
+                // Continuar con el siguiente jugador
+                if (data.next_player) {
+                    gameState.currentPlayerId = data.next_player.id;
+                    gameState.currentPlayerName = data.next_player.player_name;
+                    
+                    setTimeout(() => {
+                        showAlert(`Turno de: ${data.next_player.player_name}`, 'info');
+                        prepareTurn();
+                    }, 1500);
+                } else {
+                    showAlert('Esperando a que otros jugadores jueguen sus cartas...', 'info');
+                }
             }
             
         } else {
@@ -285,23 +354,37 @@ async function playCard(cardId) {
 }
 
 // Agregar carta al área de juego
-function addCardToPlayArea(cardId, attributeValue) {
+function addCardToPlayArea(cardId, attributeValue, playerName) {
+    const playArea = document.getElementById('cardsInPlay');
+    
+    // Limpiar el mensaje inicial si existe
+    if (playArea.children.length === 1 && playArea.children[0].tagName === 'P') {
+        playArea.innerHTML = '';
+    }
+    
     const card = gameState.playerCards.find(c => c.id == cardId);
     if (!card) return;
     
-    const playArea = document.getElementById('cardsInPlay');
     const cardElement = document.createElement('div');
-    cardElement.className = 'card';
+    cardElement.className = 'card played-card';
     cardElement.innerHTML = `
         <img src="${card.image_url || '/placeholder-card.jpg'}" alt="${card.name}" onerror="this.style.display='none'">
         <div class="card-content">
             <h4>${card.name}</h4>
+            <div class="player-label">${playerName}</div>
             <div class="attribute-value">
                 <strong>${getAttributeIcon(gameState.currentAttribute)} ${attributeValue}</strong>
             </div>
         </div>
     `;
     playArea.appendChild(cardElement);
+    
+    // Añadir animación
+    cardElement.style.transform = 'scale(0)';
+    cardElement.style.transition = 'transform 0.3s ease';
+    setTimeout(() => {
+        cardElement.style.transform = 'scale(1)';
+    }, 100);
 }
 
 // Obtener icono del atributo
@@ -315,6 +398,19 @@ function getAttributeIcon(attribute) {
         'peleas_ganadas': '🏆'
     };
     return icons[attribute] || '⭐';
+}
+
+// Obtener nombre legible del atributo
+function getAttributeName(attribute) {
+    const names = {
+        'altura_mts': 'Altura',
+        'fuerza': 'Fuerza',
+        'velocidad_percent': 'Velocidad',
+        'tecnica': 'Técnica',
+        'ki': 'Ki',
+        'peleas_ganadas': 'Peleas Ganadas'
+    };
+    return names[attribute] || attribute;
 }
 
 // Mostrar resultado de la ronda
@@ -351,14 +447,14 @@ function showRoundResult(roundResult) {
         gameState.currentRound++;
         
         // Limpiar área de juego
-        document.getElementById('cardsInPlay').innerHTML = '';
+        document.getElementById('cardsInPlay').innerHTML = '<p style="text-align: center; color: #666; padding: 40px;">Las cartas jugadas aparecerán aquí</p>';
         
         // Verificar si el juego terminó
         if (gameState.currentRound > 8) {
             showFinalResults();
         } else {
-            // Actualizar cartas del jugador
-            fetchPlayerCards();
+            // Actualizar estado del juego
+            fetchGameState();
             // Iniciar siguiente ronda
             setTimeout(startNewRound, 1000);
         }
@@ -390,19 +486,6 @@ async function loadRoundComparison() {
     } catch (error) {
         console.error('Error cargando comparación:', error);
     }
-}
-
-// Obtener nombre legible del atributo
-function getAttributeName(attribute) {
-    const names = {
-        'altura_mts': 'Altura',
-        'fuerza': 'Fuerza',
-        'velocidad_percent': 'Velocidad',
-        'tecnica': 'Técnica',
-        'ki': 'Ki',
-        'peleas_ganadas': 'Peleas Ganadas'
-    };
-    return names[attribute] || attribute;
 }
 
 // Mostrar resultados finales
@@ -452,12 +535,12 @@ async function showFinalResults() {
     }
 }
 
-// Renderizar cartas del jugador
+// Renderizar cartas del jugador actual
 function renderPlayerCards() {
     const cardsContainer = document.getElementById('playerCards');
     
     if (!gameState.playerCards || gameState.playerCards.length === 0) {
-        cardsContainer.innerHTML = '<p>No tienes más cartas</p>';
+        cardsContainer.innerHTML = '<p>No hay cartas para mostrar</p>';
         return;
     }
     
@@ -485,9 +568,14 @@ function renderPlayerCards() {
 }
 
 // Actualizar UI del juego
-function updateGameState(data) {
+function updateGameUI(data) {
     // Actualizar información de la ronda
     document.getElementById('currentRound').textContent = `Ronda: ${data.room.current_round}`;
+    
+    // Actualizar información del turno
+    if (gameState.currentPlayerName) {
+        document.getElementById('currentTurn').textContent = `Turno de: ${gameState.currentPlayerName}`;
+    }
     
     // Actualizar marcador
     if (data.players) {
@@ -506,9 +594,9 @@ function updateGameState(data) {
 // Actualizar marcador
 function updateScoreboard(players) {
     const scoreboard = document.getElementById('playerScores');
-    scoreboard.innerHTML = players.map(player => `
-        <div class="player-score">
-            <span class="player-name">${player.player_name}</span>
+    scoreboard.innerHTML = players.map((player, index) => `
+        <div class="player-score ${player.id === gameState.currentPlayerId ? 'current-turn' : ''}">
+            <span class="player-name">${player.player_name}${player.id === gameState.currentPlayerId ? ' 👈' : ''}</span>
             <span class="score">${player.score} pts</span>
         </div>
     `).join('');
@@ -518,7 +606,7 @@ function updateScoreboard(players) {
 function startGameLoop() {
     // Actualizar estado cada 3 segundos
     setInterval(async () => {
-        if (!gameState.gameFinished) {
+        if (!gameState.gameFinished && !document.querySelector('.modal.active')) {
             await fetchGameState();
         }
     }, 3000);
@@ -574,7 +662,7 @@ function showAlert(message, type = 'info') {
     }, 5000);
 }
 
-// Añadir estilos CSS para animaciones
+// Añadir estilos CSS para animaciones y turnos
 const style = document.createElement('style');
 style.textContent = `
     @keyframes slideIn {
@@ -589,6 +677,39 @@ style.textContent = `
     .card:hover {
         transform: translateY(-10px) scale(1.05);
         box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+    }
+    
+    .card.selectable {
+        animation: pulse 2s infinite;
+        border-color: var(--accent-color);
+        box-shadow: 0 0 15px rgba(255, 215, 61, 0.5);
+    }
+    
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+    }
+    
+    .played-card {
+        margin: 10px;
+        position: relative;
+    }
+    
+    .played-card .player-label {
+        background: var(--primary-color);
+        color: white;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 0.8em;
+        margin: 5px 0;
+        text-align: center;
+    }
+    
+    .player-score.current-turn {
+        background: rgba(255, 215, 61, 0.3);
+        border-left-color: var(--accent-color);
+        font-weight: bold;
     }
     
     .played-cards {

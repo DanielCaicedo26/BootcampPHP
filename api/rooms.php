@@ -41,8 +41,7 @@ switch ($method) {
                 
             case 'join':
                 try {
-                   
-                  $roomId = intval($input['room_id'] ?? 0);
+                    $roomId = intval($input['room_id'] ?? 0);
                     $playerName = sanitizeInput($input['player_name'] ?? '');
 
                     if (!$roomId || empty($playerName)) {
@@ -60,9 +59,6 @@ switch ($method) {
                         jsonResponse(['error' => 'Sala no encontrada', 'room_id' => $roomId], 404);
                     }
 
-        
-                   
-        
                     // Verificar estado de sala
                     if ($room['status'] !== 'waiting') {
                         jsonResponse(['error' => 'La sala no está disponible', 'status' => $room['status']], 400);
@@ -89,7 +85,6 @@ switch ($method) {
                             'room_id' => $room['id'],
                             'details' => $jsonLastError
                         ], 500);
-
                     }
                 } catch (Exception $e) {
                     error_log("Error en join: " . $e->getMessage());
@@ -126,10 +121,6 @@ switch ($method) {
                         jsonResponse(['error' => 'Sala no encontrada'], 404);
                     }
                     
-                    if (!$room['selected_map_id']) {
-                        jsonResponse(['error' => 'La sala debe tener un mapa seleccionado'], 400);
-                    }
-                    
                     // Inicializar estado del juego
                     if (!$game->initializeGameState($roomId)) {
                         jsonResponse(['error' => 'Error al inicializar el juego'], 500);
@@ -147,7 +138,7 @@ switch ($method) {
                     jsonResponse([
                         'success' => true,
                         'game_state' => $gameState,
-                        'selected_map' => $game->getMapById($room['selected_map_id'])
+                        'selected_map' => $room['selected_map_id'] ? $game->getMapById($room['selected_map_id']) : null
                     ]);
                 } catch (Exception $e) {
                     error_log("Error en start_game: " . $e->getMessage());
@@ -193,7 +184,7 @@ switch ($method) {
                     jsonResponse(['error' => 'Código de sala requerido'], 400);
                 }
                 
-                
+                $room = $gameRoom->getRoomByCode($roomCode);
                 if (!$room) {
                     jsonResponse(['error' => 'Sala no encontrada'], 404);
                 }
@@ -255,10 +246,17 @@ switch ($method) {
                     $selectedMap = $game->getMapById($room['selected_map_id']);
                 }
                 
+                // Obtener el jugador del turno actual
+                $currentPlayer = null;
+                if ($room['current_turn'] > 0) {
+                    $currentPlayer = $game->getCurrentTurnPlayer($roomId);
+                }
+                
                 jsonResponse([
                     'room' => $room,
                     'players' => $players,
-                    'selected_map' => $selectedMap
+                    'selected_map' => $selectedMap,
+                    'current_player' => $currentPlayer
                 ]);
                 break;
                 
@@ -309,3 +307,4 @@ switch ($method) {
     default:
         jsonResponse(['error' => 'Método no permitido'], 405);
 }
+?>
