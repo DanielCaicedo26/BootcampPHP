@@ -17,6 +17,12 @@ body {
     background-size: cover;
 }
 
+.bola{
+    width: 15%;
+    height: 15%;
+    position: relative;
+}
+
 /* Header */
 .game-header {
     background: rgba(255, 255, 255, 0.95);
@@ -97,7 +103,7 @@ body {
     display: flex;
     gap: 20px;
     margin-bottom: 30px;
-    background: rgba(0, 0, 0, 0.079);
+    background: rgba(0, 0, 0, 0.479);
     backdrop-filter: blur(20px);
     padding: 10px;
     border-radius: 15px;
@@ -195,7 +201,8 @@ body {
 
 /* Configuración de juego */
 .game-setup {
-    background: rgba(255, 255, 255, 0.95);
+    background: rgba(0, 0, 0, 0.479);
+    backdrop-filter: blur(10px);
     border-radius: 20px;
     padding: 30px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
@@ -207,7 +214,7 @@ body {
 }
 
 .setup-header h2 {
-    color: #333;
+    color: #ffffff;
     font-size: 2.2em;
     margin-bottom: 10px;
 }
@@ -313,7 +320,7 @@ body {
 .maps-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(120px, 1fr,));
-        display: flex;
+    display: flex;
     flex-wrap: wrap;
     gap: 20px;  
 }
@@ -372,7 +379,7 @@ body {
 .selected-map-indicator {
     margin-top: 15px;
     padding: 10px;
-    background: #4CAF50;
+    background: linear-gradient(135deg, #ff0000 0%, #FFEA00 120%);
     color: white;
     border-radius: 5px;
     text-align: center;
@@ -382,7 +389,7 @@ body {
 .start-game-section {
     text-align: center;
     padding: 30px;
-    background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+    background: linear-gradient(135deg, #ff0000 0%, #FFEA00 120%);
     border-radius: 15px;
     box-shadow: 0 8px 25px rgba(76, 175, 80, 0.3);
     width: 48%;
@@ -604,6 +611,8 @@ body {
 .modal-header h3 {
     color: #333;
     font-size: 1.3em;
+    margin-right: 55% ;
+    margin-top: 1%;
 }
 
 .close-modal {
@@ -665,7 +674,7 @@ body {
 }
 
 .summary-player {
-    background: #667eea;
+    background: #ff0000;
     color: white;
     padding: 4px 12px;
     border-radius: 15px;
@@ -692,12 +701,12 @@ body {
 }
 
 .btn-primary {
-    background: #667eea;
+    background: linear-gradient(135deg, #ff0000 0%, #FFEA00 120%);
     color: white;
 }
 
 .btn-primary:hover {
-    background: #5a67d8;
+    background: linear-gradient(135deg, #FFEA00 0%, #ff0000 90%);
     transform: translateY(-2px);
 }
 
@@ -837,10 +846,4 @@ body {
     .maps-grid {
         display: grid;
     }
-}
-
-.bola{
-    width: 5%;
-    background: url(../Img/bola.png);
-    position: absolute;
 }

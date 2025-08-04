@@ -1,0 +1,18 @@
+/* Reset y configuración base */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: "Bubblegum Sans", sans-serif;
+    font-weight: 400;
+    font-style: normal;
+    background: linear-gradient(135deg, #ff0000 0%, #FFEA00 80%);
+    min-height: 100vh;
+    color: #333;
+    background: url(../Img/fondo.png); 
+    background-repeat: no-repeat;
+    background-size: cover;
+}
