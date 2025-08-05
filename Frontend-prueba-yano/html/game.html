@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,6 +10,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bubblegum+Sans&display=swap" rel="stylesheet">
 </head>
+
 <body>
     <header class="game-header">
         <div class="header-content">
@@ -36,14 +38,14 @@
 
         <!-- Área de juego principal -->
         <div class="game-board">
-            <!-- Área donde se muestran las cartas jugadas -->
-            <div class="played-cards-area">
-                <img src="../Img/bolas.png" class="bola" alt="">
-                <h3>Cartas en Juego</h3>
-                <div class="cards-in-play" id="cardsInPlay">
-                    <p style="text-align: center; color: #666; padding: 40px;">
-                        Las cartas jugadas aparecerán aquí
-                    </p>
+
+            <!-- Mano del jugador actual -->
+            <div class="player-hand" id="playerHandContainer">
+                <h3>🃏 Cartas del Jugador Actual</h3>
+                <div class="cards-container" id="playerCards">
+                    <div style="text-align: center; color: #666; padding: 40px;">
+                        Las cartas aparecerán cuando sea el turno del jugador
+                    </div>
                 </div>
             </div>
 
@@ -57,7 +59,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="current-attribute">
                     <h3>🎲 Atributo Actual</h3>
                     <span id="selectedAttribute">Esperando ronda...</span>
@@ -73,26 +75,28 @@
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Mano del jugador actual -->
-        <div class="player-hand" id="playerHandContainer">
-            <h3>🃏 Cartas del Jugador Actual</h3>
-            <div class="cards-container" id="playerCards">
-                <div style="text-align: center; color: #666; padding: 40px;">
-                    Las cartas aparecerán cuando sea el turno del jugador
+            <!-- Área donde se muestran las cartas jugadas -->
+            <div class="played-cards-area">
+                <img src="../Img/bolas.png" class="bola" alt="">
+                <h3>Cartas en Juego</h3>
+                <div class="cards-in-play" id="cardsInPlay">
+                    <p style="text-align: center; color: #666; padding: 40px;">
+                        Las cartas jugadas aparecerán aquí
+                    </p>
                 </div>
             </div>
-        </div>
 
-        <!-- Panel de información de la ronda -->
-        <div class="round-info">
-            <div class="round-status">
-                <h3>📊 Estado de la Ronda</h3>
-                <div id="roundStatus">
-                    <p>Preparando nueva partida...</p>
+            <!-- Panel de información de la ronda -->
+            <div class="round-info">
+                <div class="round-status">
+                    <h3>📊 Estado de la Ronda</h3>
+                    <div id="roundStatus">
+                        <p>Preparando nueva partida...</p>
+                    </div>
                 </div>
             </div>
+
         </div>
     </main>
 
@@ -118,4 +122,5 @@
 
     <script src="../js/game.js"></script>
 </body>
+
 </html>
