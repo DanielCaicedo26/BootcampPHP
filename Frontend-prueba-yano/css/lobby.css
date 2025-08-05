@@ -36,6 +36,7 @@ body {
     align-items: center;
 }
 
+
 .logo h1 {
     color: #000000;
     font-size: 1.8em;
@@ -84,7 +85,7 @@ body {
     max-width: 1200px;
     margin: 0 auto;
     padding: 30px 20px;
-    max-height: 650px;
+    max-height: 640px;
     overflow-y: scroll; /* Muestra scroll solo vertical */
 }
 
@@ -384,7 +385,7 @@ body {
 .start-game-section {
     text-align: center;
     padding: 30px;
-    background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+    background: linear-gradient(135deg, #ff0000 0%, #FFEA00 80%);
     border-radius: 15px;
     box-shadow: 0 8px 25px rgba(76, 175, 80, 0.3);
     width: 48%;
@@ -405,6 +406,36 @@ body {
     letter-spacing: 1px;
     height: 70px;
     margin-top: -3%;
+    width: 100%;
+}
+
+/* .radio{
+    width: 15%;
+    height: 180%;
+    left: -2%;
+    position: relative;
+}
+
+.start-game-btn-text{
+    text-align: center;
+    position: relative;
+    left: -7%;
+    position: relative;
+    top: -75%;
+} */
+
+.radio {
+  width: 14%;
+  height: 110%;
+  margin-top: -1%;
+}
+
+.start-game-btn-text {
+    text-align: center;
+    color: white;
+    position: relative;
+    left: -2%;
+    top: -40%;
 }
 
 .start-game-btn:hover {
@@ -605,7 +636,9 @@ body {
 
 .modal-header h3 {
     color: #333;
-    font-size: 1.3em;
+    font-size: 1.4em;
+    left: -55%;
+    position: relative;
 }
 
 .close-modal {
@@ -667,7 +700,7 @@ body {
 }
 
 .summary-player {
-    background: #667eea;
+    background: #ff0000;
     color: white;
     padding: 4px 12px;
     border-radius: 15px;
@@ -694,12 +727,12 @@ body {
 }
 
 .btn-primary {
-    background: #667eea;
+    background: linear-gradient(135deg, #ff0000 0%, #FFEA00 80%);
     color: white;
 }
 
 .btn-primary:hover {
-    background: #5a67d8;
+    background: linear-gradient(135deg, #FFEA00 0%, #ff0000 120%);
     transform: translateY(-2px);
 }
 
@@ -842,7 +875,6 @@ body {
 }
 
 .bola{
-    width: 5%;
-    background: url(../Img/bola.png);
-    position: absolute;
+    width: 15%;
+    position: relative;
 }

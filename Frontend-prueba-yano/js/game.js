@@ -163,7 +163,7 @@ function showAttributeRoulette(selectedAttribute, attributeName) {
     modal.innerHTML = `
         <div class="modal-content" style="text-align: center; max-width: 600px;">
             <h2>🎲 Ruleta de Atributos</h2>
-            <div id="roulette" style="display: flex; justify-content: space-around; margin: 30px 0; flex-wrap: wrap;">
+            <div id="roulette" style="display: flex; justify-content: space-around; margin: 20px 0; flex-wrap: wrap;">
                 ${attributes.map(attr => `
                     <div class="attribute-option" style="padding: 20px; margin: 10px; border: 3px solid #ddd; border-radius: 15px; background: white; transition: all 0.3s ease;">
                         <div style="font-size: 3em;">${attr.icon}</div>
@@ -548,7 +548,7 @@ function renderPlayerCards() {
         <div class="card" data-card-id="${card.id}">
             <img src="${card.image_url || '/placeholder-card.jpg'}" alt="${card.name}" 
                  onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-            <div class="card-placeholder" style="display: none; align-items: center; justify-content: center; height: 60%; font-size: 3em;">🃏</div>
+            <div class="card-placeholder" style="display: none; align-items: center; justify-content: center; height: 40%; font-size: 3em;">🃏</div>
             <div class="card-content">
                 <h4>${card.name}</h4>
                 <div class="card-stats">
@@ -707,8 +707,8 @@ style.textContent = `
     }
     
     .player-score.current-turn {
-        background: rgba(255, 215, 61, 0.3);
-        border-left-color: var(--accent-color);
+        background: rgba(255, 255, 0, 0.57);
+        border-left-color: #FFEA00;
         font-weight: bold;
     }
     

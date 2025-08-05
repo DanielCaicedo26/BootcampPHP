@@ -17,11 +17,17 @@ body {
     min-height: 100vh;
 }
 
+.bola{
+    width: 7%;
+    position: absolute;
+    left: 16%;
+}
+
 /* Header del juego */
 .game-header {
-    background: rgba(44, 62, 80, 0.95);
+    background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(10px);
-    color: white;
+    color: rgb(0, 0, 0);
     padding: 1rem;
     box-shadow: 0 2px 10px rgba(0,0,0,0.3);
     position: sticky;
@@ -39,8 +45,8 @@ body {
 
 .game-info h1 {
     margin: 0;
-    font-size: 1.8em;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    font-size: 1.8em;   
+    color: black;
 }
 
 .match-info {
@@ -83,10 +89,11 @@ body {
 }
 
 .played-cards-area h3 {
-    margin-top: 0;
+    margin-top: 3.5%;
     color: var(--dark-color);
     text-align: center;
     margin-bottom: 1rem;
+    font-size: 2em;
 }
 
 .cards-in-play {
@@ -120,7 +127,7 @@ body {
 }
 
 .current-attribute {
-    background: rgba(255, 215, 61, 0.9);
+    background: linear-gradient(135deg, #ff0000 0%, #FFEA00 80%);
     padding: 1.5rem;
     border-radius: 12px;
     box-shadow: 0 4px 15px rgba(0,0,0,0.1);
@@ -254,6 +261,7 @@ body {
     transform: none !important;
 }
 
+
 /* Scoreboard */
 .player-score {
     display: flex;
@@ -263,12 +271,12 @@ body {
     margin: 0.5rem 0;
     background: rgba(255, 255, 255, 0.8);
     border-radius: 8px;
-    border-left: 4px solid var(--secondary-color);
+    border-left: 4px solid red;
 }
 
 .player-score:first-child {
-    border-left-color: var(--accent-color);
-    background: rgba(255, 215, 61, 0.2);
+    border-left-color: #ff0000 ;
+    background: linear-gradient(135deg, #ff0000 0%, #FFEA00 70%);
 }
 
 .player-name {
@@ -278,7 +286,6 @@ body {
 
 .score {
     font-weight: bold;
-    color: var(--secondary-color);
     background: white;
     padding: 4px 8px;
     border-radius: 4px;
@@ -615,5 +622,5 @@ body {
 .card.selectable {
     animation: pulse 2s infinite;
     border-color: var(--accent-color);
-    box-shadow: 0 0 15px rgba(255, 215, 61, 0.5);
+    box-shadow: 0 0 15px #FFEA00(255, 215, 61, 0.5);
 }
