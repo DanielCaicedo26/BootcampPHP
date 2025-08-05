@@ -87,7 +87,7 @@ body {
     max-width: 1200px;
     margin: 0 auto;
     padding: 30px 20px;
-    max-height: 640px;
+    max-height: 530px;
     overflow-y: scroll; /* Muestra scroll solo vertical */
 }
 
