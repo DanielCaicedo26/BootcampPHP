@@ -219,10 +219,44 @@ class Game {
         }
     }
 
-    // Iniciar nueva ronda con atributo aleatorio
-    public function startNewRound($roomId) {
+    // NUEVO: Verificar si necesita seleccionar atributo para la ronda
+    public function needsAttributeSelection($roomId) {
+        try {
+            $stmt = $this->db->prepare("
+                SELECT current_round FROM game_rooms WHERE id = ?
+            ");
+            $stmt->execute([$roomId]);
+            $currentRound = $stmt->fetchColumn();
+            
+            if (!$currentRound || $currentRound > 8) {
+                return false;
+            }
+            
+            // Verificar si ya existe una ronda activa con atributo seleccionado
+            $stmt = $this->db->prepare("
+                SELECT id FROM game_rounds 
+                WHERE room_id = ? AND round_number = ? AND selected_attribute IS NOT NULL
+            ");
+            $stmt->execute([$roomId, $currentRound]);
+            
+            return !$stmt->fetch(); // Devuelve true si NO existe ronda con atributo
+        } catch (Exception $e) {
+            error_log("Error en needsAttributeSelection: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    // NUEVO: Seleccionar atributo manualmente para la ronda
+    public function selectAttributeForRound($roomId, $selectedAttribute) {
         try {
             $this->db->beginTransaction();
+            
+            // Verificar que el atributo es válido
+            $validAttributes = ['altura_mts', 'tecnica', 'fuerza', 'peleas_ganadas', 'velocidad_percent', 'ki'];
+            if (!in_array($selectedAttribute, $validAttributes)) {
+                $this->db->rollback();
+                return ['error' => 'Atributo no válido'];
+            }
             
             // Obtener información actual del juego
             $stmt = $this->db->prepare("SELECT current_round, current_turn FROM game_rooms WHERE id = ?");
@@ -237,42 +271,29 @@ class Game {
             // Verificar si ya existe una ronda activa
             $stmt = $this->db->prepare("
                 SELECT id FROM game_rounds 
-                WHERE room_id = ? AND round_number = ? AND winner_player_id IS NULL
+                WHERE room_id = ? AND round_number = ?
             ");
             $stmt->execute([$roomId, $gameInfo['current_round']]);
             $existingRound = $stmt->fetch();
             
             if ($existingRound) {
-                // Ya hay una ronda activa, devolver su información
+                // Actualizar ronda existente con el atributo seleccionado
                 $stmt = $this->db->prepare("
-                    SELECT selected_attribute FROM game_rounds 
+                    UPDATE game_rounds 
+                    SET selected_attribute = ? 
                     WHERE id = ?
                 ");
-                $stmt->execute([$existingRound['id']]);
-                $selectedAttribute = $stmt->fetchColumn();
-                
-                $this->db->commit();
-                return [
-                    'success' => true,
-                    'round_id' => $existingRound['id'],
-                    'round_number' => $gameInfo['current_round'],
-                    'selected_attribute' => $selectedAttribute,
-                    'attribute_name' => $this->getAttributeName($selectedAttribute),
-                    'current_turn' => $gameInfo['current_turn']
-                ];
+                $stmt->execute([$selectedAttribute, $existingRound['id']]);
+                $roundId = $existingRound['id'];
+            } else {
+                // Crear nueva ronda con el atributo seleccionado
+                $stmt = $this->db->prepare("
+                    INSERT INTO game_rounds (room_id, round_number, selected_attribute)
+                    VALUES (?, ?, ?)
+                ");
+                $stmt->execute([$roomId, $gameInfo['current_round'], $selectedAttribute]);
+                $roundId = $this->db->lastInsertId();
             }
-            
-            // Seleccionar atributo aleatorio
-            $attributes = ['altura_mts', 'tecnica', 'fuerza', 'peleas_ganadas', 'velocidad_percent', 'ki'];
-            $selectedAttribute = $attributes[array_rand($attributes)];
-            
-            // Crear nueva ronda
-            $stmt = $this->db->prepare("
-                INSERT INTO game_rounds (room_id, round_number, selected_attribute)
-                VALUES (?, ?, ?)
-            ");
-            $stmt->execute([$roomId, $gameInfo['current_round'], $selectedAttribute]);
-            $roundId = $this->db->lastInsertId();
             
             $this->db->commit();
             
@@ -282,6 +303,79 @@ class Game {
                 'round_number' => $gameInfo['current_round'],
                 'selected_attribute' => $selectedAttribute,
                 'attribute_name' => $this->getAttributeName($selectedAttribute),
+                'current_turn' => $gameInfo['current_turn']
+            ];
+        } catch (Exception $e) {
+            $this->db->rollback();
+            error_log("Error seleccionando atributo: " . $e->getMessage());
+            return ['error' => 'Error al seleccionar el atributo: ' . $e->getMessage()];
+        }
+    }
+
+    // MODIFICADO: Iniciar nueva ronda (ahora sin selección automática de atributo)
+    public function startNewRound($roomId) {
+        try {
+            $this->db->beginTransaction();
+            
+            // Obtener información actual del juego
+            $stmt = $this->db->prepare("SELECT current_round, current_turn FROM game_rooms WHERE id = ?");
+            $stmt->execute([$roomId]);
+            $gameInfo = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($gameInfo['current_round'] > 8) {
+                $this->db->rollback();
+                return ['error' => 'El juego ya ha terminado'];
+            }
+            
+            // Verificar si ya existe una ronda sin atributo seleccionado
+            $stmt = $this->db->prepare("
+                SELECT id, selected_attribute FROM game_rounds 
+                WHERE room_id = ? AND round_number = ?
+            ");
+            $stmt->execute([$roomId, $gameInfo['current_round']]);
+            $existingRound = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($existingRound) {
+                if ($existingRound['selected_attribute']) {
+                    // Ronda ya existe con atributo seleccionado
+                    $this->db->commit();
+                    return [
+                        'success' => true,
+                        'round_id' => $existingRound['id'],
+                        'round_number' => $gameInfo['current_round'],
+                        'selected_attribute' => $existingRound['selected_attribute'],
+                        'attribute_name' => $this->getAttributeName($existingRound['selected_attribute']),
+                        'current_turn' => $gameInfo['current_turn'],
+                        'needs_attribute_selection' => false
+                    ];
+                } else {
+                    // Ronda existe pero sin atributo - necesita selección
+                    $this->db->commit();
+                    return [
+                        'success' => true,
+                        'round_id' => $existingRound['id'],
+                        'round_number' => $gameInfo['current_round'],
+                        'needs_attribute_selection' => true,
+                        'current_turn' => $gameInfo['current_turn']
+                    ];
+                }
+            }
+            
+            // Crear nueva ronda SIN atributo (el jugador lo seleccionará)
+            $stmt = $this->db->prepare("
+                INSERT INTO game_rounds (room_id, round_number)
+                VALUES (?, ?)
+            ");
+            $stmt->execute([$roomId, $gameInfo['current_round']]);
+            $roundId = $this->db->lastInsertId();
+            
+            $this->db->commit();
+            
+            return [
+                'success' => true,
+                'round_id' => $roundId,
+                'round_number' => $gameInfo['current_round'],
+                'needs_attribute_selection' => true,
                 'current_turn' => $gameInfo['current_turn']
             ];
         } catch (Exception $e) {
@@ -330,6 +424,12 @@ class Game {
             if (!$gameData) {
                 $this->db->rollback();
                 return ['error' => 'No hay ronda activa'];
+            }
+            
+            // Verificar que se ha seleccionado un atributo
+            if (!$gameData['selected_attribute']) {
+                $this->db->rollback();
+                return ['error' => 'Debe seleccionarse un atributo antes de jugar cartas'];
             }
             
             // Verificar si el jugador ya jugó en esta ronda

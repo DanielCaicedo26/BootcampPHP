@@ -15,7 +15,8 @@ let gameState = {
     currentPlayerName: '',
     roundInProgress: false,
     gameFinished: false,
-    totalPlayers: 0
+    totalPlayers: 0,
+    needsAttributeSelection: false
 };
 
 // Inicializar juego desde datos del lobby
@@ -75,6 +76,7 @@ async function fetchGameState() {
             gameState.players = data.players;
             gameState.totalPlayers = data.players.length;
             gameState.gameFinished = data.room.status === 'finished';
+            gameState.needsAttributeSelection = data.needs_attribute_selection || false;
             
             // Determinar el jugador actual del turno
             const currentPlayer = data.players.find(p => p.player_order === gameState.currentTurn);
@@ -122,19 +124,27 @@ async function startNewRound() {
         const data = await response.json();
         
         if (data.success) {
-            gameState.currentAttribute = data.selected_attribute;
-            gameState.roundInProgress = true;
             gameState.currentTurn = data.current_turn;
             
             // Actualizar estado del juego después de obtener la información de la ronda
             await fetchGameState();
             
-            // Mostrar ruleta de atributos
-            showAttributeRoulette(data.selected_attribute, data.attribute_name);
-            
-            // Actualizar UI
-            document.getElementById('currentRound').textContent = `Ronda: ${data.round_number}`;
-            document.getElementById('selectedAttribute').textContent = data.attribute_name;
+            // Verificar si necesita selección de atributo
+            if (data.needs_attribute_selection) {
+                gameState.needsAttributeSelection = true;
+                showAttributeSelectionModal();
+            } else {
+                // Ya tiene atributo seleccionado
+                gameState.currentAttribute = data.selected_attribute;
+                gameState.roundInProgress = true;
+                
+                // Actualizar UI
+                document.getElementById('currentRound').textContent = `Ronda: ${data.round_number}`;
+                document.getElementById('selectedAttribute').textContent = data.attribute_name;
+                
+                // Preparar turno
+                prepareTurn();
+            }
             
         } else {
             showError(data.error || 'Error al iniciar ronda');
@@ -145,102 +155,176 @@ async function startNewRound() {
     }
 }
 
-// Mostrar animación de ruleta de atributos
-function showAttributeRoulette(selectedAttribute, attributeName) {
+// NUEVA FUNCIÓN: Mostrar modal de selección de atributos
+function showAttributeSelectionModal() {
     const attributes = [
-        { key: 'altura_mts', name: 'Altura', icon: '📏' },
-        { key: 'fuerza', name: 'Fuerza', icon: '⚡' },
-        { key: 'velocidad_percent', name: 'Velocidad', icon: '🏃' },
-        { key: 'tecnica', name: 'Técnica', icon: '🧠' },
-        { key: 'ki', name: 'Ki', icon: '💫' },
-        { key: 'peleas_ganadas', name: 'Peleas Ganadas', icon: '🏆' }
+        { key: 'altura_mts', name: 'Altura', icon: '📏', description: 'Medida en metros' },
+        { key: 'fuerza', name: 'Fuerza', icon: '⚡', description: 'Poder de combate' },
+        { key: 'velocidad_percent', name: 'Velocidad', icon: '🏃', description: 'Rapidez en batalla' },
+        { key: 'tecnica', name: 'Técnica', icon: '🧠', description: 'Habilidad técnica' },
+        { key: 'ki', name: 'Ki', icon: '💫', description: 'Energía espiritual' },
+        { key: 'peleas_ganadas', name: 'Peleas Ganadas', icon: '🏆', description: 'Victorias conseguidas' }
     ];
     
-    // Crear modal de ruleta
+    // Crear modal de selección
     const modal = document.createElement('div');
     modal.className = 'modal active';
-    modal.style.backgroundColor = 'rgba(0,0,0,0.8)';
+    modal.style.backgroundColor = 'rgba(0,0,0,0.9)';
     modal.innerHTML = `
-        <div class="modal-content" style="text-align: center; max-width: 600px;">
-            <h2>🎲 Ruleta de Atributos</h2>
-            <div id="roulette" style="display: flex; justify-content: space-around; margin: 20px 0; flex-wrap: wrap;">
+        <div class="modal-content" style="text-align: center; max-width: 800px;">
+            <h2>🎯 Selecciona el Atributo para la Ronda ${gameState.currentRound}</h2>
+            <p style="color: #666; margin-bottom: 30px;">
+                Es el turno de <strong>${gameState.currentPlayerName}</strong> para elegir el atributo de combate
+            </p>
+            <div id="attributeOptions" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin: 30px 0;">
                 ${attributes.map(attr => `
-                    <div class="attribute-option" style="padding: 20px; margin: 10px; border: 3px solid #ddd; border-radius: 15px; background: white; transition: all 0.3s ease;">
-                        <div style="font-size: 3em;">${attr.icon}</div>
-                        <div style="font-weight: bold; margin-top: 10px;">${attr.name}</div>
+                    <div class="attribute-option" 
+                         onclick="selectAttribute('${attr.key}')" 
+                         style="padding: 25px; border: 3px solid #ddd; border-radius: 15px; background: white; 
+                               cursor: pointer; transition: all 0.3s ease; text-align: center;">
+                        <div style="font-size: 4em; margin-bottom: 10px;">${attr.icon}</div>
+                        <div style="font-weight: bold; font-size: 1.3em; margin-bottom: 8px; color: #333;">${attr.name}</div>
+                        <div style="font-size: 0.9em; color: #666;">${attr.description}</div>
                     </div>
                 `).join('')}
             </div>
-            <div id="result" style="display: none; margin-top: 30px;">
-                <h3>¡Atributo seleccionado!</h3>
-                <div id="selectedAttr" style="font-size: 2em; margin: 20px 0;"></div>
-                <button onclick="closeRoulette()" class="submit-btn">¡Continuar!</button>
+            <div style="color: #888; font-size: 0.9em; margin-top: 20px;">
+                Haz clic en el atributo que quieres usar para esta ronda
             </div>
         </div>
     `;
     document.body.appendChild(modal);
     
-    // Animación de selección
-    const options = modal.querySelectorAll('.attribute-option');
-    let currentIndex = 0;
-    let iterations = 0;
-    const maxIterations = 20;
+    // Función global para seleccionar atributo
+    window.selectAttribute = function(attributeKey) {
+        selectAttributeForRound(attributeKey);
+        modal.remove();
+    };
     
-    const rouletteInterval = setInterval(() => {
-        // Resetear todos los estilos
-        options.forEach(opt => {
-            opt.style.border = '3px solid #ddd';
-            opt.style.transform = 'scale(1)';
-            opt.style.backgroundColor = 'white';
+    // Añadir efectos hover a las opciones
+    const options = modal.querySelectorAll('.attribute-option');
+    options.forEach(option => {
+        option.addEventListener('mouseenter', function() {
+            this.style.border = '3px solid #ff6b6b';
+            this.style.transform = 'scale(1.05)';
+            this.style.boxShadow = '0 8px 25px rgba(255, 107, 107, 0.3)';
         });
         
-        // Destacar opción actual
-        options[currentIndex].style.border = '3px solid #ff6b6b';
-        options[currentIndex].style.transform = 'scale(1.1)';
-        options[currentIndex].style.backgroundColor = '#ffe6e6';
+        option.addEventListener('mouseleave', function() {
+            this.style.border = '3px solid #ddd';
+            this.style.transform = 'scale(1)';
+            this.style.boxShadow = 'none';
+        });
+    });
+}
+
+// NUEVA FUNCIÓN: Seleccionar atributo para la ronda
+async function selectAttributeForRound(selectedAttribute) {
+    try {
+        showAlert('Seleccionando atributo...', 'info');
         
-        currentIndex = (currentIndex + 1) % attributes.length;
-        iterations++;
+        const response = await fetch(`${API_ROOMS}?action=select_attribute`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                room_id: gameState.roomId,
+                selected_attribute: selectedAttribute
+            })
+        });
         
-        if (iterations >= maxIterations) {
-            clearInterval(rouletteInterval);
+        const data = await response.json();
+        
+        if (data.success) {
+            gameState.currentAttribute = data.selected_attribute;
+            gameState.roundInProgress = true;
+            gameState.needsAttributeSelection = false;
             
-            // Mostrar resultado final
-            const selectedAttr = attributes.find(attr => attr.key === selectedAttribute);
-            document.getElementById('selectedAttr').innerHTML = `
-                <div style="font-size: 4em;">${selectedAttr.icon}</div>
-                <div style="font-size: 1.5em; color: #ff6b6b; font-weight: bold;">${selectedAttr.name}</div>
-            `;
+            // Mostrar animación de atributo seleccionado
+            showAttributeConfirmation(data.selected_attribute, data.attribute_name);
             
-            document.getElementById('result').style.display = 'block';
+            // Actualizar UI
+            document.getElementById('currentRound').textContent = `Ronda: ${data.round_number}`;
+            document.getElementById('selectedAttribute').textContent = data.attribute_name;
             
-            // Ocultar ruleta
-            document.getElementById('roulette').style.display = 'none';
+            showAlert(`¡Atributo seleccionado: ${data.attribute_name}!`, 'success');
+            
+            // Preparar turno después de mostrar confirmación
+            setTimeout(() => {
+                prepareTurn();
+            }, 3000);
+            
+        } else {
+            showError(data.error || 'Error al seleccionar atributo');
         }
-    }, 150);
-    
-    // Función global para cerrar ruleta
-    window.closeRoulette = function() {
-        modal.remove();
-        // Cargar cartas del jugador actual y preparar turno
-        prepareTurn();
+    } catch (error) {
+        console.error('Error seleccionando atributo:', error);
+        showError('Error al seleccionar el atributo');
+    }
+}
+
+// NUEVA FUNCIÓN: Mostrar confirmación del atributo seleccionado
+function showAttributeConfirmation(selectedAttribute, attributeName) {
+    const attributeIcons = {
+        'altura_mts': '📏',
+        'fuerza': '⚡',
+        'velocidad_percent': '🏃',
+        'tecnica': '🧠',
+        'ki': '💫',
+        'peleas_ganadas': '🏆'
     };
+    
+    const modal = document.createElement('div');
+    modal.className = 'modal active';
+    modal.style.backgroundColor = 'rgba(0,0,0,0.8)';
+    modal.innerHTML = `
+        <div class="modal-content" style="text-align: center; max-width: 500px;">
+            <h2>✨ ¡Atributo Seleccionado! ✨</h2>
+            <div style="margin: 30px 0;">
+                <div style="font-size: 6em; margin-bottom: 20px; animation: pulse 2s infinite;">
+                    ${attributeIcons[selectedAttribute]}
+                </div>
+                <div style="font-size: 2em; color: #ff6b6b; font-weight: bold; margin-bottom: 10px;">
+                    ${attributeName}
+                </div>
+                <div style="color: #666; font-size: 1.1em;">
+                    Este será el atributo de combate para la Ronda ${gameState.currentRound}
+                </div>
+            </div>
+            <div style="background: #f0f8f0; padding: 15px; border-radius: 10px; margin-top: 20px;">
+                <p style="margin: 0; color: #2e7d32;">
+                    🎮 Preparando turnos de jugadores...
+                </p>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    
+    // Auto-remover después de 3 segundos
+    setTimeout(() => {
+        if (modal.parentNode) {
+            modal.remove();
+        }
+    }, 3000);
 }
 
 // Preparar turno del jugador actual
 async function prepareTurn() {
     await fetchGameState();
-    await fetchCurrentPlayerCards();
     
-    // Mostrar de quién es el turno
-    if (gameState.currentPlayerId) {
-        showAlert(`Turno de: ${gameState.currentPlayerName}`, 'info');
+    // Solo cargar cartas si no necesita selección de atributo
+    if (!gameState.needsAttributeSelection) {
+        await fetchCurrentPlayerCards();
         
-        // Solo habilitar cartas si es el turno del jugador correcto
-        enableCardSelection();
-        
-        // Actualizar información en pantalla
-        updateTurnInfo();
+        // Mostrar de quién es el turno
+        if (gameState.currentPlayerId) {
+            showAlert(`Turno de: ${gameState.currentPlayerName}`, 'info');
+            
+            // Solo habilitar cartas si es el turno del jugador correcto
+            enableCardSelection();
+            
+            // Actualizar información en pantalla
+            updateTurnInfo();
+        }
     }
 }
 
@@ -251,11 +335,19 @@ function updateTurnInfo() {
     // Actualizar área de estado del juego
     const roundStatus = document.getElementById('roundStatus');
     if (roundStatus) {
-        roundStatus.innerHTML = `
-            <p><strong>Es el turno de:</strong> ${gameState.currentPlayerName}</p>
-            <p><strong>Atributo:</strong> ${getAttributeName(gameState.currentAttribute)}</p>
-            <p><strong>Jugadores restantes:</strong> ${getPlayersLeftInRound()}</p>
-        `;
+        if (gameState.needsAttributeSelection) {
+            roundStatus.innerHTML = `
+                <p><strong>Esperando selección de atributo...</strong></p>
+                <p><strong>Turno de:</strong> ${gameState.currentPlayerName}</p>
+                <p><strong>Acción:</strong> Seleccionar atributo de combate</p>
+            `;
+        } else {
+            roundStatus.innerHTML = `
+                <p><strong>Es el turno de:</strong> ${gameState.currentPlayerName}</p>
+                <p><strong>Atributo:</strong> ${getAttributeName(gameState.currentAttribute)}</p>
+                <p><strong>Jugadores restantes:</strong> ${getPlayersLeftInRound()}</p>
+            `;
+        }
     }
 }
 
@@ -294,6 +386,11 @@ function disableCardSelection() {
 async function playCard(cardId) {
     if (!gameState.roundInProgress) {
         showAlert('No hay ronda activa', 'error');
+        return;
+    }
+    
+    if (gameState.needsAttributeSelection) {
+        showAlert('Primero debe seleccionarse un atributo para la ronda', 'error');
         return;
     }
     
@@ -608,6 +705,13 @@ function startGameLoop() {
     setInterval(async () => {
         if (!gameState.gameFinished && !document.querySelector('.modal.active')) {
             await fetchGameState();
+            
+            // Si necesita selección de atributo y no hay modal activo, mostrarlo
+            if (gameState.needsAttributeSelection && 
+                gameState.currentPlayerId === parseInt(gameState.playerId) && 
+                !document.querySelector('.modal.active')) {
+                showAttributeSelectionModal();
+            }
         }
     }, 3000);
 }
@@ -784,6 +888,21 @@ style.textContent = `
         padding: 4px;
         border-radius: 4px;
         text-align: center;
+    }
+    
+    /* Estilos para el modal de selección de atributos */
+    .attribute-option {
+        transition: all 0.3s ease;
+    }
+    
+    .attribute-option:hover {
+        border-color: #ff6b6b !important;
+        transform: scale(1.05) !important;
+        box-shadow: 0 8px 25px rgba(255, 107, 107, 0.3) !important;
+    }
+    
+    .attribute-option:active {
+        transform: scale(0.95) !important;
     }
 `;
 document.head.appendChild(style);

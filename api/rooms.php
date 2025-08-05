@@ -188,6 +188,24 @@ switch ($requestMethod) {
                 jsonResponse($roundResult);
                 break;
                 
+            // NUEVA ACCIÓN: Seleccionar atributo para la ronda
+            case 'select_attribute':
+                try {
+                    $roomId = intval($inputData['room_id'] ?? 0);
+                    $selectedAttribute = $inputData['selected_attribute'] ?? '';
+                    
+                    if ($roomId <= 0 || empty($selectedAttribute)) {
+                        jsonResponse(['error' => 'Se requiere ID de sala y atributo seleccionado'], 400);
+                    }
+                    
+                    $result = $gameController->selectAttributeForRound($roomId, $selectedAttribute);
+                    jsonResponse($result);
+                } catch (Exception $e) {
+                    error_log("Error seleccionando atributo: " . $e->getMessage());
+                    jsonResponse(['error' => 'Error al seleccionar atributo: ' . $e->getMessage()], 500);
+                }
+                break;
+                
             case 'play_card':
                 // Procesar jugada de carta
                 $roomId = intval($inputData['room_id'] ?? 0);
@@ -290,12 +308,28 @@ switch ($requestMethod) {
                     $activePlayer = $gameController->getCurrentTurnPlayer($roomIdentifier);
                 }
                 
+                // NUEVO: Verificar si necesita selección de atributo
+                $needsAttributeSelection = $gameController->needsAttributeSelection($roomIdentifier);
+                
                 jsonResponse([
                     'room' => $roomData,
                     'players' => $roomPlayers,
                     'selected_map' => $mapInfo,
-                    'current_player' => $activePlayer
+                    'current_player' => $activePlayer,
+                    'needs_attribute_selection' => $needsAttributeSelection
                 ]);
+                break;
+                
+            // NUEVA ACCIÓN: Verificar si necesita selección de atributo
+            case 'needs_attribute_selection':
+                $roomId = intval($_GET['room_id'] ?? 0);
+                
+                if ($roomId <= 0) {
+                    jsonResponse(['error' => 'ID de sala requerido'], 400);
+                }
+                
+                $needsSelection = $gameController->needsAttributeSelection($roomId);
+                jsonResponse(['needs_selection' => $needsSelection]);
                 break;
                 
             case 'round_result':
