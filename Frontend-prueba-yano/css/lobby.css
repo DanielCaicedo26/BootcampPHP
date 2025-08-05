@@ -97,8 +97,8 @@ body {
     display: flex;
     gap: 20px;
     margin-bottom: 30px;
-    background: rgba(0, 0, 0, 0.079);
-    backdrop-filter: blur(20px);
+    background: rgba(0, 0, 0, 0.318);
+    backdrop-filter: blur(10px);
     padding: 10px;
     border-radius: 15px;
 }
@@ -195,10 +195,12 @@ body {
 
 /* Configuración de juego */
 .game-setup {
-    background: rgba(255, 255, 255, 0.95);
+    background: rgba(0, 0, 0, 0.318);
     border-radius: 20px;
     padding: 30px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(20px);
+
 }
 
 .setup-header {
@@ -207,7 +209,7 @@ body {
 }
 
 .setup-header h2 {
-    color: #333;
+    color: #ffffff;
     font-size: 2.2em;
     margin-bottom: 10px;
 }
@@ -524,7 +526,7 @@ body {
     display: flex;
     justify-content: space-between;
     padding: 4px 8px;
-    background: #f8f9fa;
+    background: #ededed;
     border-radius: 5px;
 }
 
